@@ -6,7 +6,8 @@
 </head>
 <body>
   <script type="module">
-    import './game.js'
+    import { Game } from './game.js'
+    window.game = new Game(window.navigator.language)
   </script>
 </body>
 </html>

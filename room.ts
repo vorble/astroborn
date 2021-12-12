@@ -1,15 +1,16 @@
 import {
   LangMap,
-} from './lang'
+} from './lang.js'
 import {
   FromGameState,
-} from './game'
+} from './game.js'
 
 export interface Room {
   roomNo: number,
   name: LangMap<string>
   description: FromGameState<LangMap<string>>
   exits: FromGameState<Array<RoomExit>>
+  // TODO: an array of interactible things will be next (townsfolk for talking, shops, switches, etc).
 }
 
 export interface RoomExit {

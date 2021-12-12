@@ -10,6 +10,8 @@
 
 export type LangID = 'dede' | 'enus' | 'zhcn'
 
+const LANGS: Array<LangID> = ['dede', 'enus', 'zhcn']
+
 export interface LangMapInput<T> {
   dede?: T
   enus?: T
@@ -55,3 +57,12 @@ export function langmap<T>(langs: LangMapInput<T>): LangMap<T> {
   return new LangMap<T>(langs)
 }
 
+export function lookupLangID(lang: any): LangID {
+  switch (lang) {
+    case 'en-US': return 'enus'
+    case 'de-DE': return 'dede'
+    case 'zh-CN': return 'zhcn'
+  }
+  console.error(`Couldn\'t map language ${ lang }! Spinning the wheel...`)
+  return LANGS[Math.floor(Math.random() * LANGS.length)]
+}

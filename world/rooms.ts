@@ -1,5 +1,7 @@
-import { langmap } from '../lang'
-import { Room } from '../room'
+import { langmap } from '../lang.js'
+import { Room } from '../room.js'
+
+export const ROOM_NO_START = 1_000
 
 const rooms: Array<Room> = []
 

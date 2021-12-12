@@ -1,5 +1,5 @@
-import { langmap } from '../lang'
-import { Mob } from '../mob'
+import { langmap } from '../lang.js'
+import { Mob } from '../mob.js'
 
 const mobs: Array<Mob> = []
 
