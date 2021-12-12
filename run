@@ -1,0 +1,19 @@
+#!/bin/bash
+# Astroborn development server. Compiles the project
+
+set -e
+
+function serve() {
+    cd build
+    python3 -m http.server
+}
+
+# Compile frist to make sure the build directory is created.
+make
+
+# Serve the content in the background.
+serve &
+
+# Watch for modifications to source files, rebuilding when necessary.
+# This doesn't compile non-TypeScript assets into the build; make sure to run `make` for that.
+tsc --watch
