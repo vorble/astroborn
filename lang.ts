@@ -58,10 +58,15 @@ export function langmap<T>(langs: LangMapInput<T>): LangMap<T> {
 }
 
 export function lookupLangID(lang: any): LangID {
-  switch (lang) {
-    case 'en-US': return 'enus'
-    case 'de-DE': return 'dede'
-    case 'zh-CN': return 'zhcn'
+  if (!Array.isArray(lang)) {
+    lang = [lang]
+  }
+  for (const l of lang) {
+    switch (l) {
+      case 'en-US': return 'enus'
+      case 'de-DE': return 'dede'
+      case 'zh-CN': return 'zhcn'
+    }
   }
   console.error(`Couldn\'t map language ${ lang }! Spinning the wheel...`)
   return LANGS[Math.floor(Math.random() * LANGS.length)]
