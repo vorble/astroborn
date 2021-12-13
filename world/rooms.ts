@@ -15,6 +15,7 @@ rooms.push({
   }),
   exits: [
     {
+      roomExitNo: 0,
       name: langmap({
         enus: 'Northern Doorway',
       }),
@@ -36,6 +37,7 @@ rooms.push({
   }),
   exits: [
     {
+      roomExitNo: 0,
       name: langmap({
         enus: 'Southern Doorway',
       }),
