@@ -30,32 +30,30 @@ export class ButtonsBar {
     this.updateButtons()
   }
 
-  getAction(buttonIndex: number): ButtonBarAction | typeof ButtonBarActionNone | typeof ButtonBarActionPageLeft | typeof ButtonBarActionPageRight {
-    if (this.page > 0 && buttonIndex == 0) {
-      return ButtonBarActionPageLeft
+  _calculateFirstActionIndex(page: number): number {
+    if (page == 0) {
+      return 0
     }
-    const first = calculateFirstActionIndex(this.page, this.buttons.length)
-    let countActions = this.actions.length
-    countActions -= first
-    const showRightScroll = countActions > this.buttons.length - (this.page != 0 ? 1 : 0)
-    if (showRightScroll && buttonIndex == this.buttons.length - 1) {
-      return ButtonBarActionPageRight
-    }
-    const index = first + buttonIndex - (this.page != 0 ? 1 : 0)
-    if (index >= this.actions.length) {
-      return ButtonBarActionNone
-    }
-    return this.actions[index]
-
-
-
+    return (this.buttons.length - 1) + (page - 1) * (this.buttons.length - 2)
   }
 
-  getAction1(totalActions: number, totalButtons: number, buttonIndex: number) {
-    if (totalActions <= totalButtons) {
-      return buttonIndex
+  getAction(buttonIndex: number): ButtonBarAction | typeof ButtonBarActionNone | typeof ButtonBarActionPageLeft | typeof ButtonBarActionPageRight {
+    const first = this._calculateFirstActionIndex(this.page)
+    const remainingActions = this.actions.length - first
+    const getActionSimple = (buttonIndex: number, noButtons: number) : ButtonBarAction | typeof ButtonBarActionNone | typeof ButtonBarActionPageRight => {
+      const showRightScroll = remainingActions > noButtons
+      if (showRightScroll && buttonIndex == noButtons - 1) {
+        return ButtonBarActionPageRight
+      }
+      const index = first + buttonIndex
+      return index < this.actions.length ? this.actions[index] : ButtonBarActionNone
     }
-
+    if (this.page == 0) {
+      return getActionSimple(buttonIndex, this.buttons.length)
+    } else if (buttonIndex == 0) {
+      return ButtonBarActionPageLeft
+    }
+    return getActionSimple(buttonIndex - 1, this.buttons.length - 1) 
   }
 
   updateButtons() {
@@ -88,16 +86,6 @@ export class ButtonsBar {
       }
   }
 }
-
-// Based on action bar page number, find the first action's index that would be
-// available on the bar. page is zero-indexed.
-function calculateFirstActionIndex(page: number, buttons: number) {
-  if (page == 0) {
-    return 0
-  }
-  return (buttons - 1) + (page - 1) * (buttons - 2)
-}
-(window as any).calculateFirstActionIndex = calculateFirstActionIndex
 
 export class ButtonsGrid {
   buttons: Array<HTMLButtonElement>
