@@ -1,5 +1,8 @@
+import { Game } from './game.js'
+
 export interface ButtonBarAction {
   text: string
+  do: () => any
 }
 const ButtonBarActionNone = 'none'
 const ButtonBarActionPageLeft = 'left'
@@ -26,7 +29,12 @@ export class ButtonsBar {
 
   setActions(actions: Array<ButtonBarAction>) {
     this.actions = actions.slice()
-    this.page = 0
+    this.updateButtons()
+  }
+
+  setActionsAndPage(actions: Array<ButtonBarAction>, page: number) {
+    this.actions = actions.slice()
+    this.page = page
     this.updateButtons()
   }
 
@@ -82,15 +90,16 @@ export class ButtonsBar {
         this.page += 1
         this.updateButtons()
       } else {
-
+        action.do()
       }
   }
 }
 
 export class ButtonsGrid {
   buttons: Array<HTMLButtonElement>
+  game: Game
 
-  constructor() {
+  constructor(game: Game) {
     this.buttons = []
     for (const button of document.querySelectorAll('.buttons_grid button')) {
       if (!(button instanceof HTMLButtonElement)) {
@@ -98,5 +107,14 @@ export class ButtonsGrid {
       }
       this.buttons.push(button)
     }
+
+    this.buttons[0].innerText = 'Look' // TODO: Temporarily here, need to do like the action bar, but the grid needs some extra modes like left and right paging.
+    this.buttons[0].onclick = () => {
+      this.game.doLook()
+    }
+    this.game = game
+  }
+
+  reset() {
   }
 }

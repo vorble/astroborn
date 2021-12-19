@@ -15,6 +15,7 @@ export class Game {
   private playerRoomNo: number
   private state: GameState
   private bar: ButtonsBar
+  private grid: ButtonsGrid
 
   constructor(lang: any) {
     this.langID = lookupLangID(lang)
@@ -22,9 +23,12 @@ export class Game {
     this.state = {
     }
     this.bar = new ButtonsBar()
+    this.grid = new ButtonsGrid(this)
+    this.updateActions(/*resetPage=*/true)
   }
 
   // TODO: Unused?
+  /*
   getRoom(roomNo: number): Room {
     const room = rooms.find((room) => room.roomNo == roomNo)
     if (!room) {
@@ -32,6 +36,7 @@ export class Game {
     }
     return room
   }
+  */
 
   getPlayerRoom(): Room {
     const room = rooms.find((room) => room.roomNo == this.playerRoomNo)
@@ -49,25 +54,42 @@ export class Game {
     return typeof room.exits === 'function' ? room.exits(this.state) : room.exits
   }
 
-  show() {
+  updateActions(resetPage: boolean) {
     const room = this.getPlayerRoom()
-    const description = this.getRoomDescription(room)
     const exits = this.getRoomExits(room)
-
-    const story = document.getElementsByClassName('story')[0]
-
-    const storyElement = document.createElement('div')
-    storyElement.classList.add('story_element')
-    storyElement.innerText = description.get(this.langID)
-    story.appendChild(storyElement)
 
     const actions: Array<ButtonBarAction> = []
     for (const exit of exits) {
       actions.push({
         text: exit.name.get(this.langID),
+        // XXX: Hmmm... is this good or bad? Would using an interface with action tokens work better instead?
+        do: () => {
+          this.doTakeExit(exit.roomExitNo)
+        },
       })
     }
-    this.bar.setActions(actions)
+    if (resetPage) {
+      this.bar.setActionsAndPage(actions, 0)
+    } else {
+      this.bar.setActions(actions)
+    }
+    this.grid.reset()
+  }
+
+  narrate(text: string) {
+    const story = document.getElementsByClassName('story')[0]
+
+    const storyElement = document.createElement('div')
+    storyElement.classList.add('story_element')
+    storyElement.innerText = text
+    story.appendChild(storyElement)
+    storyElement.scrollIntoView()
+  }
+
+  doLook() {
+    const room = this.getPlayerRoom()
+    const description = this.getRoomDescription(room)
+    this.narrate(description.get(this.langID))
   }
 
   doTakeExit(roomExitNo: number) {
@@ -78,5 +100,7 @@ export class Game {
       throw new Error('Exit not found.')
     }
     this.playerRoomNo = exit.roomNo
+    this.narrate(exit.takeDescription.get(this.langID))
+    this.updateActions(/*resetPage=*/true)
   }
 }

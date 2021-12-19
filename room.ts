@@ -23,4 +23,5 @@ export interface RoomExit {
   name: LangMap<string>
   roomNo: number
   description: LangMap<string>
+  takeDescription: LangMap<string>
 }

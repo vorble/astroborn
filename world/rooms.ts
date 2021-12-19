@@ -22,6 +22,9 @@ rooms.push({
       description: langmap({
         enus: 'You see blue beyond the doorway to the north.',
       }),
+      takeDescription: langmap({
+        enus: 'You go through the doorway to the north.',
+      }),
       roomNo: 1_001,
     },
   ],
@@ -43,6 +46,9 @@ rooms.push({
       }),
       description: langmap({
         enus: 'You see red beyond the doorway to the south.',
+      }),
+      takeDescription: langmap({
+        enus: 'You go through the doorway to the south.',
       }),
       roomNo: 1_000,
     },
