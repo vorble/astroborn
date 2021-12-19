@@ -1,3 +1,4 @@
+import { ButtonsBar, ButtonBarAction, ButtonsGrid } from './buttons.js'
 import { LangID, LangMap, lookupLangID } from './lang.js'
 import { Room, RoomExit } from './room.js'
 
@@ -13,12 +14,14 @@ export class Game {
   private langID: LangID
   private playerRoomNo: number
   private state: GameState
+  private bar: ButtonsBar
 
   constructor(lang: any) {
     this.langID = lookupLangID(lang)
     this.playerRoomNo = ROOM_NO_START
     this.state = {
     }
+    this.bar = new ButtonsBar()
   }
 
   // TODO: Unused?
@@ -50,12 +53,21 @@ export class Game {
     const room = this.getPlayerRoom()
     const description = this.getRoomDescription(room)
     const exits = this.getRoomExits(room)
-    console.log('Room - ' + room.name.get(this.langID))
-    console.log(description.get(this.langID))
-    console.log('Exits:')
+
+    const story = document.getElementsByClassName('story')[0]
+
+    const storyElement = document.createElement('div')
+    storyElement.classList.add('story_element')
+    storyElement.innerText = description.get(this.langID)
+    story.appendChild(storyElement)
+
+    const actions: Array<ButtonBarAction> = []
     for (const exit of exits) {
-      console.log(exit.name.get(this.langID) + ' - ' + exit.description.get(this.langID))
+      actions.push({
+        text: exit.name.get(this.langID),
+      })
     }
+    this.bar.setActions(actions)
   }
 
   doTakeExit(roomExitNo: number) {

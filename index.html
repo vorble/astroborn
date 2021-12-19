@@ -2,10 +2,80 @@
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Astroborn</title>
+  <style>
+    html, body {
+      margin: 0px;
+      padding: 0px;
+    }
+
+    button {
+      border-width: 1pt;
+      padding: 1pt;
+    }
+
+    .game_client {
+      height: 100vh;
+    }
+
+    .story_container {
+      height: 75vh;
+      overflow-y: scroll;
+    }
+
+    .story {
+      height: 75vh;
+    }
+
+    .story_element {
+      margin-top: 1em;
+    }
+
+    .buttons_container {
+      height: 25vh;
+      overflow-y: scroll;
+    }
+
+    .buttons_bar {
+      height: 6vh;
+      display: grid;
+      grid-template-columns: 25% 25% 25% 25%;
+    }
+
+    .buttons_grid {
+      height: 19vh;
+      display: grid;
+      grid-template-columns: 33% 34% 33%;
+    }
+  </style>
 </head>
 <body>
-  <div id="display"></div>
+  <div class="game_client">
+    <div class="story_container">
+      <div class="story">
+      </div>
+    </div>
+    <div class="buttons_container">
+      <div class="buttons_bar">
+        <button></button>
+        <button></button>
+        <button></button>
+        <button></button>
+      </div>
+      <div class="buttons_grid">
+        <button></button>
+        <button></button>
+        <button></button>
+        <button></button>
+        <button></button>
+        <button></button>
+        <button></button>
+        <button></button>
+        <button></button>
+      </div>
+    </div>
+  </div>
   <script type="module">
     import { Game } from './game.js'
     window.game = new Game(window.navigator.languages)
