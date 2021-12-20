@@ -18,6 +18,12 @@ export interface LangMapInput<T> {
   zhcn?: T
 }
 
+export interface LangMapInputFull<T> {
+  dede: T
+  enus: T
+  zhcn: T
+}
+
 export class LangMap<T> {
   private def: T // XXX: Hmm, maybe I want a reference to the LangID too.
   private dede?: T
@@ -54,6 +60,10 @@ export class LangMap<T> {
 }
 
 export function langmap<T>(langs: LangMapInput<T>): LangMap<T> {
+  return new LangMap<T>(langs)
+}
+
+export function langmapFull<T>(langs: LangMapInputFull<T>): LangMap<T> {
   return new LangMap<T>(langs)
 }
 

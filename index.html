@@ -77,8 +77,11 @@
     </div>
   </div>
   <script type="module">
-    import { Game } from './game.js'
-    window.game = new Game(window.navigator.languages)
+    import { start } from './game.js'
+    start().catch((err) => {
+      document.getElementsByTagName('body')[0].innerHTML = 'STARTUP ERROR: ' + err.message
+      console.error(err)
+    })
   </script>
 </body>
 </html>

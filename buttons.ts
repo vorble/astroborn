@@ -1,4 +1,5 @@
 import { Game } from './game.js'
+import { langmapFull, LangMap } from './lang.js'
 
 export interface ButtonBarAction {
   text: string
@@ -8,7 +9,7 @@ const ButtonBarActionNone = 'none'
 const ButtonBarActionPageLeft = 'left'
 const ButtonBarActionPageRight = 'right'
 
-export class ButtonsBar {
+export class ButtonBar {
   buttons: Array<HTMLButtonElement>
   actions: Array<ButtonBarAction>
   page: number
@@ -81,23 +82,38 @@ export class ButtonsBar {
   }
 
   doAction(buttonIndex: number) {
-      const action = this.getAction(buttonIndex)
-      if (ButtonBarActionNone == action) {
-      } else if (ButtonBarActionPageLeft == action) {
-        this.page -= 1
-        this.updateButtons()
-      } else if (ButtonBarActionPageRight == action) {
-        this.page += 1
-        this.updateButtons()
-      } else {
-        action.do()
-      }
+    const action = this.getAction(buttonIndex)
+    if (ButtonBarActionNone == action) {
+    } else if (ButtonBarActionPageLeft == action) {
+      this.page -= 1
+      this.updateButtons()
+    } else if (ButtonBarActionPageRight == action) {
+      this.page += 1
+      this.updateButtons()
+    } else {
+      action.do()
+    }
   }
 }
 
-export class ButtonsGrid {
+export interface ButtonGridLayoutAction {
+  text: string,
+  do: () => any,
+}
+type ButtonGridLayoutControl = 'none' | 'look' | 'lookat' | 'use'
+const BG_LOOK = 0
+const BG_LOOK_AT = 1
+const BG_USE = 2
+
+export interface ButtonGridLayout {
+  lookAt: Array<ButtonGridLayoutAction>,
+  use: Array<ButtonGridLayoutAction>,
+}
+
+export class ButtonGrid {
   buttons: Array<HTMLButtonElement>
   game: Game
+  layout: null | ButtonGridLayout
 
   constructor(game: Game) {
     this.buttons = []
@@ -105,16 +121,60 @@ export class ButtonsGrid {
       if (!(button instanceof HTMLButtonElement)) {
         throw new Error('Button bar contains non-button.')
       }
+      const buttonIndex = this.buttons.length
+      button.onclick = () => this.doAction(buttonIndex)
       this.buttons.push(button)
     }
-
-    this.buttons[0].innerText = 'Look' // TODO: Temporarily here, need to do like the action bar, but the grid needs some extra modes like left and right paging.
-    this.buttons[0].onclick = () => {
-      this.game.doLook()
-    }
     this.game = game
+    this.layout = null
   }
 
-  reset() {
+  // CAUTION: Holds onto the layout object, so don't modify it after giving it to the method.
+  setLayout(layout: ButtonGridLayout) {
+    this.layout = layout
+    this.updateButtons()
+  }
+
+  updateButtons() {
+    if (this.layout == null) {
+      return ''
+    }
+    for (let i = 0; i < this.buttons.length; ++i) {
+      const button = this.buttons[i]
+      if (i == BG_LOOK) {
+        button.innerText = this.game.strings.buttonGrid.look
+      } else if (i == BG_LOOK_AT) {
+        button.innerText = this.game.strings.buttonGrid.lookAt
+      } else if (i == BG_USE) {
+        button.innerText = this.game.strings.buttonGrid.use
+      }
+    }
+  }
+
+  getAction(buttonIndex: number): ButtonGridLayoutAction | ButtonGridLayoutControl {
+    if (this.layout == null) {
+      return 'none'
+    } else if (buttonIndex == BG_LOOK) {
+      return 'look'
+    } else if (buttonIndex == BG_LOOK_AT) {
+      return 'lookat'
+    } else if (buttonIndex == BG_USE) {
+      return 'use'
+    }
+    return 'none'
+  }
+
+  doAction(buttonIndex: number) {
+    const action = this.getAction(buttonIndex)
+    if (action == 'none') {
+    } else if (action == 'look') {
+      this.game.doLook()
+    } else if (action == 'lookat') {
+      // TODO
+    } else if (action == 'use') {
+      // TODO
+    } else {
+      action.do()
+    }
   }
 }

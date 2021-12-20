@@ -1,6 +1,7 @@
-import { ButtonsBar, ButtonBarAction, ButtonsGrid } from './buttons.js'
-import { LangID, LangMap, lookupLangID } from './lang.js'
+import { ButtonBar, ButtonBarAction, ButtonGrid } from './buttons.js'
+import { LangID, LangMap, langmap, langmapFull, lookupLangID } from './lang.js'
 import { Room, RoomExit } from './room.js'
+import { getStrings, StringTable } from './strings.js'
 
 import mobs from './world/mobs.js'
 import rooms, { ROOM_NO_START } from './world/rooms.js'
@@ -10,21 +11,33 @@ export interface GameState {
 
 export type FromGameState<T> = T | ((state: GameState) => T)
 
-export class Game {
-  private langID: LangID
-  private playerRoomNo: number
-  private state: GameState
-  private bar: ButtonsBar
-  private grid: ButtonsGrid
+export async function start() {
+  const langID = lookupLangID(window.navigator.languages)
+  const strings = await getStrings(langID)
+  const game = new Game(langID, strings)
+  ;(window as any).game = game // ; is necessary
+}
 
-  constructor(lang: any) {
-    this.langID = lookupLangID(lang)
+export class Game {
+  langID: LangID
+  strings: StringTable
+  playerRoomNo: number
+  state: GameState
+  bar: ButtonBar
+  grid: ButtonGrid
+
+  constructor(langID: LangID, strings: StringTable) {
+    this.langID = langID
+    this.strings = strings
     this.playerRoomNo = ROOM_NO_START
     this.state = {
     }
-    this.bar = new ButtonsBar()
-    this.grid = new ButtonsGrid(this)
+    this.bar = new ButtonBar()
+    this.grid = new ButtonGrid(this)
+
     this.updateActions(/*resetPage=*/true)
+    this.narrate(strings.welcomeMessage)
+    this.doLook()
   }
 
   // TODO: Unused?
@@ -73,7 +86,21 @@ export class Game {
     } else {
       this.bar.setActions(actions)
     }
-    this.grid.reset()
+
+    const lookAt = []
+    for (const exit of exits) {
+      lookAt.push({
+        text: exit.name.get(this.langID),
+        do: () => {
+          this.narrate(exit.description.get(this.langID))
+        },
+      })
+    }
+
+    this.grid.setLayout({
+      lookAt: lookAt, // TODO
+      use: [], // TODO
+    })
   }
 
   narrate(text: string) {
