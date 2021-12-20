@@ -1,12 +1,13 @@
-import { ButtonBar, ButtonBarAction, ButtonGrid } from './buttons.js'
-import { LangID, LangMap, langmap, langmapFull, lookupLangID } from './lang.js'
-import { Room, RoomExit } from './room.js'
+import { ButtonBar, ButtonBarAction, ButtonGrid, ButtonGridLayoutAction } from './buttons.js'
+import { LangID, LangMap, lookupLangID } from './lang.js'
+import { Room, RoomExit, RoomObject } from './room.js'
 import { getStrings, StringTable } from './strings.js'
 
 import mobs from './world/mobs.js'
 import rooms, { ROOM_NO_START } from './world/rooms.js'
 
 export interface GameState {
+  switchDown: boolean, // TODO: Temporary. Need to namespace the states a little bit
 }
 
 export type FromGameState<T> = T | ((state: GameState) => T)
@@ -31,6 +32,7 @@ export class Game {
     this.strings = strings
     this.playerRoomNo = ROOM_NO_START
     this.state = {
+      switchDown: true,
     }
     this.bar = new ButtonBar()
     this.grid = new ButtonGrid(this)
@@ -67,9 +69,14 @@ export class Game {
     return typeof room.exits === 'function' ? room.exits(this.state) : room.exits
   }
 
+  getRoomObjects(room: Room): Array<RoomObject> {
+    return typeof room.objects === 'function' ? room.objects(this.state) : room.objects
+  }
+
   updateActions(resetPage: boolean) {
     const room = this.getPlayerRoom()
     const exits = this.getRoomExits(room)
+    const objects = this.getRoomObjects(room)
 
     const actions: Array<ButtonBarAction> = []
     for (const exit of exits) {
@@ -97,10 +104,27 @@ export class Game {
       })
     }
 
+    const use: Array<ButtonGridLayoutAction> = []
+    
+    for (const object of objects) {
+      lookAt.push({
+        text: object.name.get(this.langID),
+        do: () => {
+          this.narrate(object.description.get(this.langID))
+        },
+      })
+      use.push({
+        text: object.name.get(this.langID),
+        do: () => {
+          this.doUseObject(object.roomObjectNo)
+        },
+      })
+    }
+
     this.grid.setLayout({
       lookAt: lookAt, // TODO
-      use: [], // TODO
-    })
+      use: use, // TODO
+    }, /*reset=*/resetPage)
   }
 
   narrate(text: string) {
@@ -128,6 +152,18 @@ export class Game {
     }
     this.playerRoomNo = exit.roomNo
     this.narrate(exit.takeDescription.get(this.langID))
+    this.updateActions(/*resetPage=*/true)
+  }
+
+  doUseObject(roomObjectNo: number) {
+    const room = this.getPlayerRoom()
+    const objects = this.getRoomObjects(room)
+    const object = objects.find((object) => object.roomObjectNo == roomObjectNo)
+    if (!object) {
+      throw new Error('Object not found.')
+    }
+    this.narrate(object.useDescription.get(this.langID))
+    object.use(this.state)
     this.updateActions(/*resetPage=*/true)
   }
 }

@@ -3,6 +3,7 @@ import {
 } from './lang.js'
 import {
   FromGameState,
+  GameState,
 } from './game.js'
 
 export interface Room {
@@ -10,7 +11,7 @@ export interface Room {
   name: LangMap<string>
   description: FromGameState<LangMap<string>>
   exits: FromGameState<Array<RoomExit>>
-  // TODO: an array of interactible things will be next (townsfolk for talking, shops, switches, etc).
+  objects: FromGameState<Array<RoomObject>>
 }
 
 export interface RoomExit {
@@ -20,8 +21,17 @@ export interface RoomExit {
   // have changed (wouldn't want to use the index or something like that since it could use the wrong
   // exit in that case).
   roomExitNo: number,
-  name: LangMap<string>
-  roomNo: number
-  description: LangMap<string>
-  takeDescription: LangMap<string>
+  name: LangMap<string>,
+  roomNo: number,
+  description: LangMap<string>,
+  takeDescription: LangMap<string>,
+}
+
+export interface RoomObject {
+  // Unique number per object per room. See RoomExit#roomExitNo.
+  roomObjectNo: number,
+  name: LangMap<string>,
+  description: LangMap<string>,
+  useDescription: LangMap<string>,
+  use: (state: GameState) => any,
 }

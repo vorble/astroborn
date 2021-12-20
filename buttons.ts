@@ -101,19 +101,87 @@ export interface ButtonGridLayoutAction {
   do: () => any,
 }
 type ButtonGridLayoutControl = 'none' | 'look' | 'lookat' | 'use'
+// Button Grid Main Buttons
 const BG_LOOK = 0
 const BG_LOOK_AT = 1
 const BG_USE = 2
+// Button Grid Menu Navigation Buttons
+const BGM_LEFT = 6
+const BGM_CLOSE = 7
+const BGM_RIGHT = 8
 
 export interface ButtonGridLayout {
   lookAt: Array<ButtonGridLayoutAction>,
   use: Array<ButtonGridLayoutAction>,
 }
 
+export class ButtonGridMenu {
+  grid: ButtonGrid
+  game: Game
+  buttons: Array<HTMLButtonElement>
+  parent: null | ButtonGridMenu
+  actions: Array<ButtonGridLayoutAction>
+  page: number
+
+  constructor(grid: ButtonGrid, parent: null | ButtonGridMenu, actions: Array<ButtonGridLayoutAction> ) {
+    this.grid = grid
+    this.game = grid.game
+    this.buttons = grid.buttons
+    this.parent = parent
+    this.actions = actions
+    this.page = 0
+  }
+
+  updateButtons() {
+    const availableButtons = (this.buttons.length - 3)
+    let actionIndex = this.page * availableButtons
+    for (let i = 0; i < this.buttons.length; ++i, ++actionIndex) {
+      const button = this.buttons[i]
+      if (i == BGM_CLOSE) {
+        button.innerText = 'X'
+      } else if (i == BGM_LEFT) {
+        button.innerText = '<'
+      } else if (i == BGM_RIGHT) {
+        button.innerText = '>'
+      } else if (actionIndex < this.actions.length) {
+        button.innerText = this.actions[actionIndex].text
+      } else {
+        button.innerText = ''
+      }
+    }
+  }
+
+  doAction(buttonIndex: number) {
+    const availableButtons = (this.buttons.length - 3)
+    let actionIndex = this.page * availableButtons + buttonIndex
+    if (buttonIndex == BGM_CLOSE) {
+      this.grid.menu = this.parent
+      this.grid.updateButtons()
+    } else if (buttonIndex == BGM_LEFT) {
+      if (this.page > 0) {
+        this.page -= 1
+      }
+      this.grid.updateButtons()
+    } else if (buttonIndex == BGM_RIGHT) {
+      const availableButtons = (this.buttons.length - 3)
+      const remainingActions = this.actions.length - this.page * availableButtons
+      if (remainingActions > availableButtons) {
+        this.page += 1
+      }
+      this.grid.updateButtons()
+    } else if (actionIndex < this.actions.length) {
+      this.actions[actionIndex].do()
+      this.grid.menu = this.parent
+      this.grid.updateButtons()
+    }
+  }
+}
+
 export class ButtonGrid {
   buttons: Array<HTMLButtonElement>
   game: Game
   layout: null | ButtonGridLayout
+  menu: null | ButtonGridMenu
 
   constructor(game: Game) {
     this.buttons = []
@@ -127,16 +195,22 @@ export class ButtonGrid {
     }
     this.game = game
     this.layout = null
+    this.menu = null
   }
 
   // CAUTION: Holds onto the layout object, so don't modify it after giving it to the method.
-  setLayout(layout: ButtonGridLayout) {
+  setLayout(layout: ButtonGridLayout, resetMenus: boolean) {
     this.layout = layout
+    if (resetMenus) {
+      this.menu = null
+    }
     this.updateButtons()
   }
 
   updateButtons() {
-    if (this.layout == null) {
+    if (this.menu != null) {
+      return this.menu.updateButtons()
+    } else if (this.layout == null) {
       return ''
     }
     for (let i = 0; i < this.buttons.length; ++i) {
@@ -147,6 +221,8 @@ export class ButtonGrid {
         button.innerText = this.game.strings.buttonGrid.lookAt
       } else if (i == BG_USE) {
         button.innerText = this.game.strings.buttonGrid.use
+      } else {
+        button.innerText = ''
       }
     }
   }
@@ -165,16 +241,35 @@ export class ButtonGrid {
   }
 
   doAction(buttonIndex: number) {
+    if (this.menu != null) {
+      return this.menu.doAction(buttonIndex)
+    }
     const action = this.getAction(buttonIndex)
     if (action == 'none') {
     } else if (action == 'look') {
       this.game.doLook()
     } else if (action == 'lookat') {
-      // TODO
+      this.openLookMenu()
     } else if (action == 'use') {
-      // TODO
+      this.openUseMenu()
     } else {
       action.do()
     }
+  }
+
+  openLookMenu() {
+    if (this.layout == null) {
+      return
+    }
+    this.menu = new ButtonGridMenu(this, this.menu, this.layout.lookAt)
+    this.updateButtons()
+  }
+
+  openUseMenu() {
+    if (this.layout == null) {
+      return
+    }
+    this.menu = new ButtonGridMenu(this, this.menu, this.layout.use)
+    this.updateButtons()
   }
 }
