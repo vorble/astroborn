@@ -1,5 +1,4 @@
 import { Game } from './game.js'
-import { langmapFull, LangMap } from './lang.js'
 
 export interface ButtonBarAction {
   text: string
