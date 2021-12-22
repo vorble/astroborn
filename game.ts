@@ -8,6 +8,7 @@ import rooms, { ROOM_NO_START } from './world/rooms.js'
 
 export interface GameState {
   switchDown: boolean, // TODO: Temporary. Need to namespace the states a little bit
+  spoken: number, // TODO: Temporary.
 }
 
 export type FromGameState<T> = T | ((state: GameState) => T)
@@ -33,6 +34,7 @@ export class Game {
     this.playerRoomNo = ROOM_NO_START
     this.state = {
       switchDown: true,
+      spoken: 0,
     }
     this.bar = new ButtonBar()
     this.grid = new ButtonGrid(this)

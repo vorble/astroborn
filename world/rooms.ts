@@ -1,5 +1,6 @@
+import { GameState } from '../game.js'
 import { langmap } from '../lang.js'
-import { Room } from '../room.js'
+import { Room, RoomConvoTopic } from '../room.js'
 
 export const ROOM_NO_START = 1_000
 
@@ -65,29 +66,61 @@ rooms.push({
       },
     },
   ],
-  convos: (state) => [
-    {
-      roomConvoNo: 0,
-      name: langmap({
-        enus: 'Absence',
-      }),
-      description: langmap({
-        enus: 'There is nothing there, but you are unable to pry your attention away from it.',
-      }),
-      topics: [
-        {
-          roomConvoTopicNo: 0,
-          name: langmap({
-            enus: 'Hello?',
-          }),
-          narration: langmap({
-            enus: 'You speak, possibly expecting a response, into the void, "Hello?"',
-          }),
-          use: (state) => {},
-        },
-      ],
-    },
-  ],
+  convos: (state) => {
+    function speak(state: GameState) {
+      state.spoken += 1
+    }
+
+    const topics: Array<RoomConvoTopic> = []
+
+    if (state.spoken == 0) {
+      topics.push({
+        roomConvoTopicNo: 0,
+        name: langmap({
+          enus: 'Hello?',
+        }),
+        narration: langmap({
+          enus: 'You speak, possibly expecting a response, into the void, "Hello?"',
+        }),
+        use: speak,
+      })
+    } else if (state.spoken == 1) {
+      topics.push({
+        roomConvoTopicNo: 1,
+        name: langmap({
+          enus: 'Hello??',
+        }),
+        narration: langmap({
+          enus: 'You hesitate momentarily, but speak "Hello?"',
+        }),
+        use: speak,
+      })
+    } else {
+      topics.push({
+        roomConvoTopicNo: state.spoken,
+        name: langmap({
+          enus: 'Helllo?',
+        }),
+        narration: langmap({
+          enus: 'You speak to the void "Hello?"',
+        }),
+        use: speak,
+      })
+    }
+
+    return [
+      {
+        roomConvoNo: 0,
+        name: langmap({
+          enus: 'Absence',
+        }),
+        description: langmap({
+          enus: 'There is nothing there, but you are unable to pry your attention away from it.',
+        }),
+        topics: topics,
+      },
+    ]
+  },
 })
 
 rooms.push({
