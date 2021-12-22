@@ -1,6 +1,6 @@
 import { ButtonBar, ButtonBarAction, ButtonGrid, ButtonGridLayoutAction } from './buttons.js'
 import { LangID, LangMap, lookupLangID } from './lang.js'
-import { Room, RoomExit, RoomObject } from './room.js'
+import { Room, RoomExit, RoomObject, RoomConvo } from './room.js'
 import { getStrings, StringTable } from './strings.js'
 
 import mobs from './world/mobs.js'
@@ -73,10 +73,15 @@ export class Game {
     return typeof room.objects === 'function' ? room.objects(this.state) : room.objects
   }
 
+  getRoomConvos(room: Room): Array<RoomConvo> {
+    return typeof room.convos === 'function' ? room.convos(this.state) : room.convos
+  }
+
   updateActions(resetPage: boolean) {
     const room = this.getPlayerRoom()
     const exits = this.getRoomExits(room)
     const objects = this.getRoomObjects(room)
+    const convos = this.getRoomConvos(room)
 
     const actions: Array<ButtonBarAction> = []
     for (const exit of exits) {
@@ -105,7 +110,6 @@ export class Game {
     }
 
     const use: Array<ButtonGridLayoutAction> = []
-    
     for (const object of objects) {
       lookAt.push({
         text: object.name.get(this.langID),
@@ -121,9 +125,31 @@ export class Game {
       })
     }
 
+    const talk: Array<ButtonGridLayoutAction> = []
+    for (const conv of convos) {
+      lookAt.push({
+        text: conv.name.get(this.langID),
+        do: () => {
+          this.narrate(conv.description.get(this.langID))
+        },
+      })
+      talk.push({
+        text: conv.name.get(this.langID),
+        options: conv.topics.map((topic) => {
+          return {
+            text: topic.name.get(this.langID),
+            do: () => {
+              this.doTalk(conv.roomConvoNo, topic.roomConvoTopicNo)
+            },
+          }
+        }),
+      })
+    }
+
     this.grid.setLayout({
-      lookAt: lookAt, // TODO
-      use: use, // TODO
+      lookAt: lookAt,
+      use: use,
+      talk: talk,
     }, /*reset=*/resetPage)
   }
 
@@ -164,6 +190,22 @@ export class Game {
     }
     this.narrate(object.useDescription.get(this.langID))
     object.use(this.state)
+    this.updateActions(/*resetPage=*/true)
+  }
+
+  doTalk(roomConvNo: number, roomConvoTopicNo: number) {
+    const room = this.getPlayerRoom()
+    const objects = this.getRoomConvos(room)
+    const conv = objects.find((object) => object.roomConvoNo == roomConvNo)
+    if (null == conv) {
+      throw new Error('Conv not found.')
+    }
+    const topic = conv.topics.find((topic) => topic.roomConvoTopicNo == roomConvoTopicNo)
+    if (!topic) {
+      throw new Error('Topic not found.')
+    }
+    this.narrate(topic.narration.get(this.langID))
+    topic.use(this.state)
     this.updateActions(/*resetPage=*/true)
   }
 }

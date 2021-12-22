@@ -31,7 +31,7 @@ rooms.push({
         },
       ]
     } else {
-     return [
+      return [
         {
           roomExitNo: 1,
           name: langmap({
@@ -45,7 +45,7 @@ rooms.push({
           }),
           roomNo: 1_002,
         },
-     ]
+      ]
     }
   },
   objects: (state) => [
@@ -63,6 +63,29 @@ rooms.push({
       use: (state) => {
         state.switchDown = !state.switchDown
       },
+    },
+  ],
+  convos: (state) => [
+    {
+      roomConvoNo: 0,
+      name: langmap({
+        enus: 'Absence',
+      }),
+      description: langmap({
+        enus: 'There is nothing there, but you are unable to pry your attention away from it.',
+      }),
+      topics: [
+        {
+          roomConvoTopicNo: 0,
+          name: langmap({
+            enus: 'Hello?',
+          }),
+          narration: langmap({
+            enus: 'You speak, possibly expecting a response, into the void, "Hello?"',
+          }),
+          use: (state) => {},
+        },
+      ],
     },
   ],
 })
@@ -92,6 +115,8 @@ rooms.push({
   ],
   objects: [
   ],
+  convos: [
+  ],
 })
 
 rooms.push({
@@ -118,6 +143,8 @@ rooms.push({
     },
   ],
   objects: [
+  ],
+  convos: [
   ],
 })
 

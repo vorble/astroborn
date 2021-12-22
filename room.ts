@@ -8,10 +8,11 @@ import {
 
 export interface Room {
   roomNo: number,
-  name: LangMap<string>
-  description: FromGameState<LangMap<string>>
-  exits: FromGameState<Array<RoomExit>>
-  objects: FromGameState<Array<RoomObject>>
+  name: LangMap<string>,
+  description: FromGameState<LangMap<string>>,
+  exits: FromGameState<Array<RoomExit>>,
+  objects: FromGameState<Array<RoomObject>>,
+  convos: FromGameState<Array<RoomConvo>>,
 }
 
 export interface RoomExit {
@@ -28,10 +29,26 @@ export interface RoomExit {
 }
 
 export interface RoomObject {
-  // Unique number per object per room. See RoomExit#roomExitNo.
+  // Unique number per object per room. See RoomExit field roomExitNo.
   roomObjectNo: number,
   name: LangMap<string>,
   description: LangMap<string>,
   useDescription: LangMap<string>,
   use: (state: GameState) => any,
 }
+
+// Presents itself as a person or entity in the room.
+export interface RoomConvo {
+  roomConvoNo: number,
+  name: LangMap<string>,
+  description: LangMap<string>,
+  topics: Array<RoomConvoTopic>,
+}
+
+export interface RoomConvoTopic {
+  roomConvoTopicNo: number,
+  name: LangMap<string>,
+  narration: LangMap<string>,
+  use: (state: GameState) => any,
+}
+

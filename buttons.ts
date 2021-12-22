@@ -97,13 +97,15 @@ export class ButtonBar {
 
 export interface ButtonGridLayoutAction {
   text: string,
-  do: () => any,
+  do?: () => any,
+  options?: Array<ButtonGridLayoutAction>,
 }
-type ButtonGridLayoutControl = 'none' | 'look' | 'lookat' | 'use'
+type ButtonGridLayoutControl = 'none' | 'look' | 'lookat' | 'use' | 'talk'
 // Button Grid Main Buttons
 const BG_LOOK = 0
 const BG_LOOK_AT = 1
 const BG_USE = 2
+const BG_TALK = 3
 // Button Grid Menu Navigation Buttons
 const BGM_LEFT = 6
 const BGM_CLOSE = 7
@@ -112,6 +114,7 @@ const BGM_RIGHT = 8
 export interface ButtonGridLayout {
   lookAt: Array<ButtonGridLayoutAction>,
   use: Array<ButtonGridLayoutAction>,
+  talk: Array<ButtonGridLayoutAction>,
 }
 
 export class ButtonGridMenu {
@@ -122,7 +125,7 @@ export class ButtonGridMenu {
   actions: Array<ButtonGridLayoutAction>
   page: number
 
-  constructor(grid: ButtonGrid, parent: null | ButtonGridMenu, actions: Array<ButtonGridLayoutAction> ) {
+  constructor(grid: ButtonGrid, parent: null | ButtonGridMenu, actions: Array<ButtonGridLayoutAction>) {
     this.grid = grid
     this.game = grid.game
     this.buttons = grid.buttons
@@ -169,8 +172,14 @@ export class ButtonGridMenu {
       }
       this.grid.updateButtons()
     } else if (actionIndex < this.actions.length) {
-      this.actions[actionIndex].do()
-      this.grid.menu = this.parent
+      const dofn = this.actions[actionIndex].do
+      const options = this.actions[actionIndex].options
+      if (typeof dofn == 'function') {
+        dofn()
+        this.grid.menu = null
+      } else if (options !== undefined) {
+        this.grid.menu = new ButtonGridMenu(this.grid, this, options)
+      }
       this.grid.updateButtons()
     }
   }
@@ -220,6 +229,8 @@ export class ButtonGrid {
         button.innerText = this.game.strings.buttonGrid.lookAt
       } else if (i == BG_USE) {
         button.innerText = this.game.strings.buttonGrid.use
+      } else if (i == BG_TALK) {
+        button.innerText = this.game.strings.buttonGrid.talk
       } else {
         button.innerText = ''
       }
@@ -235,6 +246,8 @@ export class ButtonGrid {
       return 'lookat'
     } else if (buttonIndex == BG_USE) {
       return 'use'
+    } else if (buttonIndex == BG_TALK) {
+      return 'talk'
     }
     return 'none'
   }
@@ -251,8 +264,8 @@ export class ButtonGrid {
       this.openLookMenu()
     } else if (action == 'use') {
       this.openUseMenu()
-    } else {
-      action.do()
+    } else if (action == 'talk') {
+      this.openTalkMenu()
     }
   }
 
@@ -269,6 +282,15 @@ export class ButtonGrid {
       return
     }
     this.menu = new ButtonGridMenu(this, this.menu, this.layout.use)
+    this.updateButtons()
+  }
+
+  openTalkMenu() {
+    if (this.layout == null) {
+      return
+    }
+    const talk: Array<ButtonGridLayoutAction> = []
+    this.menu = new ButtonGridMenu(this, this.menu, this.layout.talk)
     this.updateButtons()
   }
 }

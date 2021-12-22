@@ -6,6 +6,7 @@ const table: StringTable = {
     look: 'Look',
     lookAt: 'Look...',
     use: 'Use...',
+    talk: 'Talk...',
   }
 }
 
