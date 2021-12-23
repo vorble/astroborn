@@ -1,6 +1,6 @@
 import { ButtonBar, ButtonBarAction, ButtonGrid, ButtonGridLayoutAction } from './buttons.js'
 import { LangID, LangMap, lookupLangID } from './lang.js'
-import { Room, RoomExit, RoomObject, RoomConvo } from './room.js'
+import { Room, RoomExit, RoomObject, RoomConvo, RoomConvoTopic } from './room.js'
 import { getStrings, StringTable } from './strings.js'
 
 import mobs from './world/mobs.js'
@@ -22,6 +22,7 @@ export async function start() {
 
 export class Game {
   langID: LangID
+  callPassState: number
   strings: StringTable
   playerRoomNo: number
   state: GameState
@@ -30,6 +31,7 @@ export class Game {
 
   constructor(langID: LangID, strings: StringTable) {
     this.langID = langID
+    this.callPassState = 0
     this.strings = strings
     this.playerRoomNo = ROOM_NO_START
     this.state = {
@@ -43,17 +45,6 @@ export class Game {
     this.narrate(strings.welcomeMessage)
     this.doLook()
   }
-
-  // TODO: Unused?
-  /*
-  getRoom(roomNo: number): Room {
-    const room = rooms.find((room) => room.roomNo == roomNo)
-    if (!room) {
-      throw new Error(`Room ${ roomNo } not found.`)
-    }
-    return room
-  }
-  */
 
   getPlayerRoom(): Room {
     const room = rooms.find((room) => room.roomNo == this.playerRoomNo)
@@ -79,7 +70,45 @@ export class Game {
     return typeof room.convos === 'function' ? room.convos(this.state) : room.convos
   }
 
+  _callPassExit(exit: RoomExit): () => void {
+    const expectation = this.callPassState
+    return () => {
+      if (this.callPassState == expectation) {
+        return this.doTakeExit(exit)
+      }
+    }
+  }
+
+  _callPassNarrate(narration: string): () => void {
+    const expectation = this.callPassState
+    return () => {
+      if (this.callPassState == expectation) {
+        return this.narrate(narration)
+      }
+    }
+  }
+
+  _callPassUseObject(object: RoomObject): () => void {
+    const expectation = this.callPassState
+    return () => {
+      if (this.callPassState == expectation) {
+        return this.doUseObject(object)
+      }
+    }
+  }
+
+  _callPassTalk(topic: RoomConvoTopic): () => void {
+    const expectation = this.callPassState
+    return () => {
+      if (this.callPassState == expectation) {
+        return this.doTalk(topic)
+      }
+    }
+  }
+
   updateActions(resetPage: boolean) {
+    this.callPassState = (this.callPassState + 1) % 256
+
     const room = this.getPlayerRoom()
     const exits = this.getRoomExits(room)
     const objects = this.getRoomObjects(room)
@@ -89,10 +118,7 @@ export class Game {
     for (const exit of exits) {
       actions.push({
         text: exit.name.get(this.langID),
-        // XXX: Hmmm... is this good or bad? Would using an interface with action tokens work better instead?
-        do: () => {
-          this.doTakeExit(exit.roomExitNo)
-        },
+        do: this._callPassExit(exit),
       })
     }
     if (resetPage) {
@@ -105,9 +131,7 @@ export class Game {
     for (const exit of exits) {
       lookAt.push({
         text: exit.name.get(this.langID),
-        do: () => {
-          this.narrate(exit.description.get(this.langID))
-        },
+        do: this._callPassNarrate(exit.description.get(this.langID)),
       })
     }
 
@@ -115,15 +139,11 @@ export class Game {
     for (const object of objects) {
       lookAt.push({
         text: object.name.get(this.langID),
-        do: () => {
-          this.narrate(object.description.get(this.langID))
-        },
+        do: this._callPassNarrate(object.description.get(this.langID)),
       })
       use.push({
         text: object.name.get(this.langID),
-        do: () => {
-          this.doUseObject(object.roomObjectNo)
-        },
+        do: this._callPassUseObject(object),
       })
     }
 
@@ -131,18 +151,14 @@ export class Game {
     for (const conv of convos) {
       lookAt.push({
         text: conv.name.get(this.langID),
-        do: () => {
-          this.narrate(conv.description.get(this.langID))
-        },
+        do: this._callPassNarrate(conv.description.get(this.langID)),
       })
       talk.push({
         text: conv.name.get(this.langID),
         options: conv.topics.map((topic) => {
           return {
             text: topic.name.get(this.langID),
-            do: () => {
-              this.doTalk(conv.roomConvoNo, topic.roomConvoTopicNo)
-            },
+            do: this._callPassTalk(topic),
           }
         }),
       })
@@ -171,41 +187,19 @@ export class Game {
     this.narrate(description.get(this.langID))
   }
 
-  doTakeExit(roomExitNo: number) {
-    const room = this.getPlayerRoom()
-    const exits = this.getRoomExits(room)
-    const exit = exits.find((exit) => exit.roomExitNo == roomExitNo)
-    if (!exit) {
-      throw new Error('Exit not found.')
-    }
+  doTakeExit(exit: RoomExit) {
     this.playerRoomNo = exit.roomNo
     this.narrate(exit.takeDescription.get(this.langID))
     this.updateActions(/*resetPage=*/true)
   }
 
-  doUseObject(roomObjectNo: number) {
-    const room = this.getPlayerRoom()
-    const objects = this.getRoomObjects(room)
-    const object = objects.find((object) => object.roomObjectNo == roomObjectNo)
-    if (!object) {
-      throw new Error('Object not found.')
-    }
+  doUseObject(object: RoomObject) {
     this.narrate(object.useDescription.get(this.langID))
     object.use(this.state)
     this.updateActions(/*resetPage=*/true)
   }
 
-  doTalk(roomConvNo: number, roomConvoTopicNo: number) {
-    const room = this.getPlayerRoom()
-    const objects = this.getRoomConvos(room)
-    const conv = objects.find((object) => object.roomConvoNo == roomConvNo)
-    if (null == conv) {
-      throw new Error('Conv not found.')
-    }
-    const topic = conv.topics.find((topic) => topic.roomConvoTopicNo == roomConvoTopicNo)
-    if (!topic) {
-      throw new Error('Topic not found.')
-    }
+  doTalk(topic: RoomConvoTopic) {
     this.narrate(topic.narration.get(this.langID))
     topic.use(this.state)
     this.updateActions(/*resetPage=*/true)

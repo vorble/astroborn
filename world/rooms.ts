@@ -75,7 +75,6 @@ rooms.push({
 
     if (state.spoken == 0) {
       topics.push({
-        roomConvoTopicNo: 0,
         name: langmap({
           enus: 'Hello?',
         }),
@@ -86,7 +85,6 @@ rooms.push({
       })
     } else if (state.spoken == 1) {
       topics.push({
-        roomConvoTopicNo: 1,
         name: langmap({
           enus: 'Hello??',
         }),
@@ -97,7 +95,6 @@ rooms.push({
       })
     } else {
       topics.push({
-        roomConvoTopicNo: state.spoken,
         name: langmap({
           enus: 'Helllo?',
         }),
@@ -133,7 +130,6 @@ rooms.push({
   }),
   exits: [
     {
-      roomExitNo: 0,
       name: langmap({
         enus: `Southern Doorway`,
       }),
@@ -162,7 +158,6 @@ rooms.push({
   }),
   exits: [
     {
-      roomExitNo: 0,
       name: langmap({
         enus: `Southern Doorway`,
       }),
@@ -180,5 +175,9 @@ rooms.push({
   convos: [
   ],
 })
+
+/*export function getRoom(roomNo: number): Room {
+  let zoneNo = Math.floor(roomNo / 1000)
+}*/
 
 export default rooms
