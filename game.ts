@@ -1,16 +1,12 @@
 import { ButtonBar, ButtonBarAction, ButtonGrid, ButtonGridLayoutAction } from './buttons.js'
 import { LangID, LangMap, lookupLangID } from './lang.js'
-import { Room, RoomExit, RoomObject, RoomConvo, RoomConvoTopic } from './room.js'
 import { getStrings, StringTable } from './strings.js'
+import { Narration, Scene } from './scene.js'
 
-import mobs from './world/mobs.js'
-import rooms, { ROOM_NO_START } from './world/rooms.js'
+import * as world from './world/index.js'
+import { Menu, Room, Thing, ThingExit, Action } from './world/index.js'
 
-export interface GameState {
-  switchDown: boolean, // TODO: Temporary. Need to namespace the states a little bit
-  spoken: number, // TODO: Temporary.
-}
-
+export type GameState = ReturnType<typeof world.state>
 export type FromGameState<T> = T | ((state: GameState) => T)
 
 export async function start() {
@@ -33,11 +29,8 @@ export class Game {
     this.langID = langID
     this.callPassState = 0
     this.strings = strings
-    this.playerRoomNo = ROOM_NO_START
-    this.state = {
-      switchDown: true,
-      spoken: 0,
-    }
+    this.playerRoomNo = world.startRoomNo
+    this.state = world.state()
     this.bar = new ButtonBar()
     this.grid = new ButtonGrid(this)
 
@@ -47,7 +40,7 @@ export class Game {
   }
 
   getPlayerRoom(): Room {
-    const room = rooms.find((room) => room.roomNo == this.playerRoomNo)
+    const room = world.rooms.find((room) => room.roomNo == this.playerRoomNo)
     if (!room) {
       throw new Error(`Player room ${ this.playerRoomNo } not found.`)
     }
@@ -58,19 +51,15 @@ export class Game {
     return typeof room.description === 'function' ? room.description(this.state) : room.description
   }
 
-  getRoomExits(room: Room): Array<RoomExit> {
-    return typeof room.exits === 'function' ? room.exits(this.state) : room.exits
+  getRoomThings(room: Room): Array<Thing> {
+    if (typeof room.things === 'function') {
+      const things = room.things(this.state)
+      return Array.isArray(things) ? things : [things]
+    }
+    return Array.isArray(room.things) ? room.things : [room.things]
   }
 
-  getRoomObjects(room: Room): Array<RoomObject> {
-    return typeof room.objects === 'function' ? room.objects(this.state) : room.objects
-  }
-
-  getRoomConvos(room: Room): Array<RoomConvo> {
-    return typeof room.convos === 'function' ? room.convos(this.state) : room.convos
-  }
-
-  _callPassExit(exit: RoomExit): () => void {
+  _callPassExit(exit: ThingExit): () => void {
     const expectation = this.callPassState
     return () => {
       if (this.callPassState == expectation) {
@@ -79,7 +68,7 @@ export class Game {
     }
   }
 
-  _callPassNarrate(narration: string): () => void {
+  _callPassNarrate(narration: Narration | Scene): () => void {
     const expectation = this.callPassState
     return () => {
       if (this.callPassState == expectation) {
@@ -88,97 +77,97 @@ export class Game {
     }
   }
 
-  _callPassUseObject(object: RoomObject): () => void {
+  _callPassAction(action: Action): () => void {
     const expectation = this.callPassState
     return () => {
       if (this.callPassState == expectation) {
-        return this.doUseObject(object)
+        return this.doAction(action)
       }
     }
   }
 
-  _callPassTalk(topic: RoomConvoTopic): () => void {
-    const expectation = this.callPassState
-    return () => {
-      if (this.callPassState == expectation) {
-        return this.doTalk(topic)
-      }
+  _makeMenu(menu: Menu): ButtonGridLayoutAction {
+    const result: ButtonGridLayoutAction = {
+      text: menu.text.get(this.langID),
     }
+    const action = menu.action
+    if (typeof action === 'function') {
+      result.do = () => {
+        action(this.state)
+      }
+    } else if (action instanceof LangMap) {
+      result.do = () => this._callPassNarrate(action.get(this.langID))
+    } else if (Array.isArray(action)) {
+      result.options = action.map((action) => this._makeMenu(action))
+    } else {
+      result.options = [this._makeMenu(action)]
+    }
+    return result
   }
 
   updateActions(resetPage: boolean) {
     this.callPassState = (this.callPassState + 1) % 256
 
     const room = this.getPlayerRoom()
-    const exits = this.getRoomExits(room)
-    const objects = this.getRoomObjects(room)
-    const convos = this.getRoomConvos(room)
+    const things = this.getRoomThings(room)
 
-    const actions: Array<ButtonBarAction> = []
-    for (const exit of exits) {
-      actions.push({
-        text: exit.name.get(this.langID),
-        do: this._callPassExit(exit),
-      })
-    }
-    if (resetPage) {
-      this.bar.setActionsAndPage(actions, 0)
-    } else {
-      this.bar.setActions(actions)
-    }
-
+    const use = []
+    const talk = []
+    const go = []
     const lookAt = []
-    for (const exit of exits) {
+    for (const thing of things) {
+      const name = thing.name.get(this.langID)
       lookAt.push({
-        text: exit.name.get(this.langID),
-        do: this._callPassNarrate(exit.description.get(this.langID)),
+        text: name,
+        do: this._callPassNarrate(thing.description.get(this.langID)),
       })
+      if (thing.exit) {
+        go.push({
+          text: name,
+          do: this._callPassExit(thing.exit),
+        })
+      }
+      if (thing.use) {
+        use[0] = this._makeMenu(thing.use)
+      }
+      if (thing.talk) {
+        talk[0] = this._makeMenu(thing.talk)
+      }
     }
 
-    const use: Array<ButtonGridLayoutAction> = []
-    for (const object of objects) {
-      lookAt.push({
-        text: object.name.get(this.langID),
-        do: this._callPassNarrate(object.description.get(this.langID)),
-      })
-      use.push({
-        text: object.name.get(this.langID),
-        do: this._callPassUseObject(object),
-      })
-    }
-
-    const talk: Array<ButtonGridLayoutAction> = []
-    for (const conv of convos) {
-      lookAt.push({
-        text: conv.name.get(this.langID),
-        do: this._callPassNarrate(conv.description.get(this.langID)),
-      })
-      talk.push({
-        text: conv.name.get(this.langID),
-        options: conv.topics.map((topic) => {
-          return {
-            text: topic.name.get(this.langID),
-            do: this._callPassTalk(topic),
-          }
-        }),
-      })
+    if (resetPage) {
+      this.bar.setActionsAndPage(go, 0)
+    } else {
+      this.bar.setActions(go)
     }
 
     this.grid.setLayout({
       lookAt: lookAt,
       use: use,
       talk: talk,
-    }, /*reset=*/resetPage)
+    }, resetPage)
   }
 
-  narrate(text: string) {
+  narrate(narration: Narration | Scene) {
     const story = document.getElementsByClassName('story')[0]
+    function write(text: string) {
+      text = text.replace(/\s+/g, ' ').replace(/\r?\n/g, ' ')
+      const storyElement = document.createElement('div')
+      storyElement.classList.add('story_element')
+      storyElement.innerText = text
+      story.appendChild(storyElement)
+      storyElement.scrollIntoView()
+    }
 
-    const storyElement = document.createElement('div')
-    storyElement.classList.add('story_element')
-    storyElement.innerText = text
-    story.appendChild(storyElement)
-    storyElement.scrollIntoView()
+    if (narration instanceof Scene) {
+      // TODO
+    } else if (Array.isArray(narration)) {
+      for (const stanza of narration) {
+        write(stanza)
+      }
+    } else {
+      write(narration)
+    }
   }
 
   doLook() {
@@ -187,21 +176,20 @@ export class Game {
     this.narrate(description.get(this.langID))
   }
 
-  doTakeExit(exit: RoomExit) {
-    this.playerRoomNo = exit.roomNo
-    this.narrate(exit.takeDescription.get(this.langID))
+  doTakeExit(exit: ThingExit) {
+    if (typeof exit.toRoomNo === 'number') {
+      this.playerRoomNo = exit.toRoomNo
+    }
+    this.narrate(exit.useNarration.get(this.langID))
     this.updateActions(/*resetPage=*/true)
   }
 
-  doUseObject(object: RoomObject) {
-    this.narrate(object.useDescription.get(this.langID))
-    object.use(this.state)
-    this.updateActions(/*resetPage=*/true)
-  }
-
-  doTalk(topic: RoomConvoTopic) {
-    this.narrate(topic.narration.get(this.langID))
-    topic.use(this.state)
-    this.updateActions(/*resetPage=*/true)
+  doAction(action: Action) {
+    if (typeof action === 'function') {
+      const result = action(this.state)
+      if (result) {
+        this._callPassNarrate(result)
+      }
+    }
   }
 }

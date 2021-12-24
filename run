@@ -8,7 +8,7 @@ function serve() {
     python3 -m http.server
 }
 
-# Compile frist to make sure the build directory is created.
+# Compile first to make sure the build directory is created.
 make
 
 # Serve the content in the background.

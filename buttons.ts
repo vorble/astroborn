@@ -175,6 +175,7 @@ export class ButtonGridMenu {
       const dofn = this.actions[actionIndex].do
       const options = this.actions[actionIndex].options
       if (typeof dofn == 'function') {
+        console.log(dofn)
         dofn()
         this.grid.menu = null
       } else if (options !== undefined) {
