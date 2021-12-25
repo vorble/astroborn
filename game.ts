@@ -6,7 +6,14 @@ import { Narration, Scene } from './scene.js'
 import * as world from './world/index.js'
 import { Menu, Room, Thing, ThingExit, Action } from './world/index.js'
 
-export type GameState = ReturnType<typeof world.state>
+type GameStateFromWorlds = ReturnType<typeof world.state>
+export interface GameState extends GameStateFromWorlds {
+  player: {
+    roomNo: number,
+    items: Array<number>,
+    equipment: Array<number>,
+  },
+}
 export type FromGameState<T> = T | ((state: GameState) => T)
 
 export async function start() {
@@ -20,7 +27,6 @@ export class Game {
   langID: LangID
   callPassState: number
   strings: StringTable
-  playerRoomNo: number
   state: GameState
   bar: ButtonBar
   grid: ButtonGrid
@@ -29,8 +35,14 @@ export class Game {
     this.langID = langID
     this.callPassState = 0
     this.strings = strings
-    this.playerRoomNo = world.startRoomNo
-    this.state = world.state()
+    this.state = {
+      ...world.state(),
+      player: {
+        roomNo: world.startRoomNo,
+        items: [],
+        equipment: [],
+      },
+    }
     this.bar = new ButtonBar()
     this.grid = new ButtonGrid(this)
 
@@ -40,9 +52,9 @@ export class Game {
   }
 
   getPlayerRoom(): Room {
-    const room = world.rooms.find((room) => room.roomNo == this.playerRoomNo)
+    const room = world.rooms.find((room) => room.roomNo == this.state.player.roomNo)
     if (!room) {
-      throw new Error(`Player room ${ this.playerRoomNo } not found.`)
+      throw new Error(`Player room ${ this.state.player.roomNo } not found.`)
     }
     return room
   }
@@ -178,7 +190,7 @@ export class Game {
 
   doTakeExit(exit: ThingExit) {
     if (typeof exit.toRoomNo === 'number') {
-      this.playerRoomNo = exit.toRoomNo
+      this.state.player.roomNo = exit.toRoomNo
     }
     this.narrate(exit.useNarration.get(this.langID))
     this.updateActions(/*resetPage=*/true)

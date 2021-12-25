@@ -48,8 +48,8 @@ export interface Thing {
 }
 
 export interface ThingExit {
-    useNarration: LangMap<Narration | Scene>,
-    toRoomNo?: number,
+  useNarration: LangMap<Narration | Scene>,
+  toRoomNo?: number,
 }
 
 export type Action = Menu
@@ -63,3 +63,21 @@ export interface Menu {
 }
 
 export type ActionResult = undefined | null | LangMap<Narration | Scene>
+
+export interface Item {
+  itemNo: number,
+  name: LangMap<string>,
+  description: LangMap<string>,
+  // If it can be used, it has a use action.
+  use?: ((state: GameState) => ActionResult),
+  // If it can be equipped, it has equipment stats.
+  equipmentStats?: EquipmentStats,
+  // If it can be sold, it has a sell value.
+  sellValue?: number,
+}
+
+export interface EquipmentStats {
+  // Only one piece of equipment in a singleton category may be equipped. For example, the player
+  // may only equip a single weapon.
+  singletonCategory?: 'weapon',
+}
