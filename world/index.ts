@@ -76,8 +76,17 @@ export interface Item {
   sellValue?: number,
 }
 
-export interface EquipmentStats {
+interface StatsOptional {
+  health?: number,
+  energy?: number,
+  attack?: number,
+  defense?: number,
+  power?: number,
+  spirit?: number,
+  tech?: number,
+}
+export interface EquipmentStats extends StatsOptional {
   // Only one piece of equipment in a singleton category may be equipped. For example, the player
   // may only equip a single weapon.
-  singletonCategory?: 'weapon',
+  singletonCategory?: 'weapon' | 'gloves',
 }

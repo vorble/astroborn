@@ -1,4 +1,4 @@
-import { ButtonBar, ButtonBarAction, ButtonGrid, ButtonGridLayoutAction } from './buttons.js'
+import { ButtonBar, ButtonGrid, ButtonGridLayoutAction } from './buttons.js'
 import { LangID, LangMap, lookupLangID } from './lang.js'
 import { getStrings, StringTable } from './strings.js'
 import { Narration, Scene } from './scene.js'
@@ -6,13 +6,25 @@ import { Narration, Scene } from './scene.js'
 import * as world from './world/index.js'
 import { Menu, Room, Thing, ThingExit, Action } from './world/index.js'
 
+// TODO: Move this to a player module or something
+interface Player {
+  roomNo: number,
+  items: Array<number>,
+  equipment: Array<number>,
+  health: number,
+  healthMax: number,
+  energy: number,
+  energyMax: number,
+  attack: number,
+  defense: number,
+  power: number,
+  spirit: number,
+  tech: number,
+}
+
 type GameStateFromWorlds = ReturnType<typeof world.state>
 export interface GameState extends GameStateFromWorlds {
-  player: {
-    roomNo: number,
-    items: Array<number>,
-    equipment: Array<number>,
-  },
+  player: Player,
 }
 export type FromGameState<T> = T | ((state: GameState) => T)
 
@@ -41,6 +53,15 @@ export class Game {
         roomNo: world.startRoomNo,
         items: [],
         equipment: [],
+        health: 10,
+        healthMax: 10,
+        energy: 5,
+        energyMax: 5,
+        attack: 10,
+        defense: 10,
+        power: 10,
+        spirit: 10,
+        tech: 10,
       },
     }
     this.bar = new ButtonBar()
@@ -172,6 +193,7 @@ export class Game {
     }
 
     if (narration instanceof Scene) {
+      alert('Please implement scenes.')
       // TODO
     } else if (Array.isArray(narration)) {
       for (const stanza of narration) {
