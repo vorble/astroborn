@@ -7,6 +7,7 @@ export interface StringTable {
     lookAt: string,
     use: string,
     talk: string,
+    get: string,
   },
 }
 

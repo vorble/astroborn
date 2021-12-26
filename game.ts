@@ -4,7 +4,7 @@ import { getStrings, StringTable } from './strings.js'
 import { Narration, Scene } from './scene.js'
 
 import * as world from './world/index.js'
-import { Menu, Room, Thing, ThingExit, Action } from './world/index.js'
+import { Menu, Room, Thing, ThingExit, Action, Item } from './world/index.js'
 
 // TODO: Move this to a player module or something
 interface Player {
@@ -27,6 +27,10 @@ export interface GameState extends GameStateFromWorlds {
   player: Player,
 }
 export type FromGameState<T> = T | ((state: GameState) => T)
+
+export function stateAddItem(state: GameState, itemNo: number) {
+  state.player.items.push(itemNo)
+}
 
 export async function start() {
   const langID = lookupLangID(window.navigator.languages)
@@ -86,10 +90,9 @@ export class Game {
 
   getRoomThings(room: Room): Array<Thing> {
     if (typeof room.things === 'function') {
-      const things = room.things(this.state)
-      return Array.isArray(things) ? things : [things]
-    }
-    return Array.isArray(room.things) ? room.things : [room.things]
+      return room.things(this.state)
+    } 
+    return room.things
   }
 
   _callPassExit(exit: ThingExit): () => void {
@@ -125,9 +128,7 @@ export class Game {
     }
     const action = menu.action
     if (typeof action === 'function') {
-      result.do = () => {
-        action(this.state)
-      }
+      result.do = this._callPassAction(action)
     } else if (action instanceof LangMap) {
       result.do = () => this._callPassNarrate(action.get(this.langID))
     } else if (Array.isArray(action)) {
@@ -144,10 +145,12 @@ export class Game {
     const room = this.getPlayerRoom()
     const things = this.getRoomThings(room)
 
+    const lookAt = []
+    const go = []
+    const get = []
     const use = []
     const talk = []
-    const go = []
-    const lookAt = []
+
     for (const thing of things) {
       const name = thing.name.get(this.langID)
       lookAt.push({
@@ -158,6 +161,12 @@ export class Game {
         go.push({
           text: name,
           do: this._callPassExit(thing.exit),
+        })
+      }
+      if (thing.get) {
+        get.push({
+          text: name,
+          do: this._callPassAction(thing.get.action),
         })
       }
       if (thing.use) {
@@ -174,11 +183,7 @@ export class Game {
       this.bar.setActions(go)
     }
 
-    this.grid.setLayout({
-      lookAt: lookAt,
-      use: use,
-      talk: talk,
-    }, resetPage)
+    this.grid.setLayout({ lookAt, use, talk, get }, resetPage)
   }
 
   narrate(narration: Narration | Scene) {
@@ -222,8 +227,10 @@ export class Game {
     if (typeof action === 'function') {
       const result = action(this.state)
       if (result) {
-        this._callPassNarrate(result)
+        // TODO: Why can I pass just result without a type error?
+        this.narrate(result.get(this.langID))
       }
     }
+    this.updateActions(/*resetPage=*/true)
   }
 }

@@ -21,6 +21,11 @@ export const rooms = [
   ...Void.rooms,
 ]
 
+export const items = [
+  ...Lenuve.items,
+  ...Void.items,
+]
+
 // Use this function to create an initial game state. Implicit return type is intentional. It helps
 // define the GameState interface.
 export function state() {
@@ -36,7 +41,7 @@ export interface Room {
   roomNo: number,
   name: LangMap<string>,
   description: FromGameState<LangMap<string>>,
-  things: FromGameState<Thing | Array<Thing>>,
+  things: FromGameState<Array<Thing>>,
 }
 
 export interface Thing {
@@ -45,6 +50,7 @@ export interface Thing {
   exit?: ThingExit,
   use?: Menu,
   talk?: Menu,
+  get?: Menu,
 }
 
 export interface ThingExit {

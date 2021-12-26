@@ -1,4 +1,4 @@
-import { GameState, langmap, Room } from '../index.js'
+import { GameState, Item, langmap, Room } from '../index.js'
 
 export function state() {
   return {
@@ -7,3 +7,4 @@ export function state() {
 }
 
 export const rooms: Array<Room> = []
+export const items: Array<Item> = []

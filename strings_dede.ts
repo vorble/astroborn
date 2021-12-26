@@ -7,6 +7,7 @@ const table: StringTable = {
     lookAt: '', // TODO
     use: '', // TODO
     talk: '', // TODO
+    get: '', // TODO
   }
 }
 

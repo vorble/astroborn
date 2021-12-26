@@ -100,12 +100,13 @@ export interface ButtonGridLayoutAction {
   do?: () => any,
   options?: Array<ButtonGridLayoutAction>,
 }
-type ButtonGridLayoutControl = 'none' | 'look' | 'lookat' | 'use' | 'talk'
+type ButtonGridLayoutControl = 'none' | 'look' | 'lookat' | 'use' | 'talk' | 'get'
 // Button Grid Main Buttons
 const BG_LOOK = 0
 const BG_LOOK_AT = 1
 const BG_USE = 2
 const BG_TALK = 3
+const BG_GET = 4
 // Button Grid Menu Navigation Buttons
 const BGM_LEFT = 6
 const BGM_CLOSE = 7
@@ -115,6 +116,7 @@ export interface ButtonGridLayout {
   lookAt: Array<ButtonGridLayoutAction>,
   use: Array<ButtonGridLayoutAction>,
   talk: Array<ButtonGridLayoutAction>,
+  get: Array<ButtonGridLayoutAction>,
 }
 
 export class ButtonGridMenu {
@@ -175,7 +177,6 @@ export class ButtonGridMenu {
       const dofn = this.actions[actionIndex].do
       const options = this.actions[actionIndex].options
       if (typeof dofn == 'function') {
-        console.log(dofn)
         dofn()
         this.grid.menu = null
       } else if (options !== undefined) {
@@ -232,6 +233,8 @@ export class ButtonGrid {
         button.innerText = this.game.strings.buttonGrid.use
       } else if (i == BG_TALK) {
         button.innerText = this.game.strings.buttonGrid.talk
+      } else if (i == BG_GET) {
+        button.innerText = this.game.strings.buttonGrid.get
       } else {
         button.innerText = ''
       }
@@ -249,6 +252,8 @@ export class ButtonGrid {
       return 'use'
     } else if (buttonIndex == BG_TALK) {
       return 'talk'
+    } else if (buttonIndex == BG_GET) {
+      return 'get'
     }
     return 'none'
   }
@@ -267,6 +272,8 @@ export class ButtonGrid {
       this.openUseMenu()
     } else if (action == 'talk') {
       this.openTalkMenu()
+    } else if (action == 'get') {
+      this.openGetMenu()
     }
   }
 
@@ -283,6 +290,14 @@ export class ButtonGrid {
       return
     }
     this.menu = new ButtonGridMenu(this, this.menu, this.layout.use)
+    this.updateButtons()
+  }
+
+  openGetMenu() {
+    if (this.layout == null) {
+      return
+    }
+    this.menu = new ButtonGridMenu(this, this.menu, this.layout.get)
     this.updateButtons()
   }
 
