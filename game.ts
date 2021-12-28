@@ -113,6 +113,24 @@ export class Game {
     }
   }
 
+  _callPassEquip(item: Item): () => void {
+    const expectation = this.callPassState
+    return () => {
+      if (this.callPassState == expectation) {
+        return this.doEquip(item)
+      }
+    }
+  }
+
+  _callPassUnequip(item: Item): () => void {
+    const expectation = this.callPassState
+    return () => {
+      if (this.callPassState == expectation) {
+        return this.doUnequip(item)
+      }
+    }
+  }
+
   _callPassAction(action: Action): () => void {
     const expectation = this.callPassState
     return () => {
@@ -150,6 +168,51 @@ export class Game {
     const get = []
     const use = []
     const talk = []
+    const items: Array<ButtonGridLayoutAction> = []
+
+    const addItem = (itemNo: number, isEquipped: boolean) => {
+      const item = world.getItem(itemNo)
+      if (item == null) {
+        console.warn(`Couldn\'t find item for itemNo=${ itemNo }.`)
+        this.state.player.items = this.state.player.items.filter((ino) => ino != itemNo)
+        return
+      }
+      const options = [
+        {
+          text: this.strings.buttonGrid.item_look_at,
+          do: this._callPassNarrate(item.description.get(this.langID)),
+        },
+      ]
+      if (typeof item.use !== 'undefined') {
+        options.push({
+          text: this.strings.buttonGrid.item_use,
+          do: this._callPassAction(item.use),
+        })
+      }
+      if (typeof item.equipmentStats !== 'undefined') {
+        if (isEquipped) {
+          options.push({
+            text: this.strings.buttonGrid.item_unequip,
+            do: this._callPassUnequip(item),
+          })
+        } else {
+          options.push({
+            text: this.strings.buttonGrid.item_equip,
+            do: this._callPassEquip(item),
+          })
+        }
+      }
+      items.push({
+        text: item.name.get(this.langID),
+        options,
+      })
+    }
+    for (const itemNo of this.state.player.equipment) {
+      addItem(itemNo, true)
+    }
+    for (const itemNo of this.state.player.items) {
+      addItem(itemNo, false)
+    }
 
     for (const thing of things) {
       const name = thing.name.get(this.langID)
@@ -183,7 +246,7 @@ export class Game {
       this.bar.setActions(go)
     }
 
-    this.grid.setLayout({ lookAt, use, talk, get }, resetPage)
+    this.grid.setLayout({ lookAt, use, talk, get, items }, resetPage)
   }
 
   narrate(narration: Narration | Scene) {
@@ -207,6 +270,56 @@ export class Game {
     } else {
       write(narration)
     }
+  }
+
+  doEquip(item: Item) {
+    const keepItems = []
+    let claimed = false
+    for (const itemNo of this.state.player.items) {
+      if (!claimed && itemNo == item.itemNo) {
+        claimed = true
+      } else {
+        keepItems.push(itemNo)
+      }
+    }
+    let dupe = false
+    if (claimed && item.equipmentStats?.singletonCategory) {
+      for (const itemNo of this.state.player.equipment) {
+        const equip = world.getItem(itemNo)
+        if (equip && equip.equipmentStats?.singletonCategory
+            && equip.equipmentStats?.singletonCategory == item.equipmentStats.singletonCategory) {
+          dupe = true
+        }
+      }
+    }
+    let full = claimed && this.state.player.equipment.length >= 3
+    if (full) {
+      this.narrate(this.strings.buttonGrid.item_equip_full)
+    } else if (dupe) {
+      this.narrate(this.strings.buttonGrid.item_equip_dupe)
+    } else if (claimed) {
+      this.narrate(this.strings.buttonGrid.item_equip_success)
+      this.state.player.equipment.push(item.itemNo)
+      this.state.player.items = keepItems
+    }
+    this.updateActions(/*resetPage=*/true)
+  }
+
+  doUnequip(item: Item) {
+    const keepEquipment = []
+    let claimed = false
+    for (const itemNo of this.state.player.equipment) {
+      if (!claimed && itemNo == item.itemNo) {
+        claimed = true
+      } else {
+        keepEquipment.push(itemNo)
+      }
+    }
+    if (claimed) {
+      this.state.player.equipment = keepEquipment
+      this.state.player.items.push(item.itemNo)
+    }
+    this.updateActions(/*resetPage=*/true)
   }
 
   doLook() {

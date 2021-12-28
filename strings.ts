@@ -8,6 +8,14 @@ export interface StringTable {
     use: string,
     talk: string,
     get: string,
+    item: string,
+    item_look_at: string,
+    item_use: string,
+    item_equip: string,
+    item_unequip: string,
+    item_equip_full: string,
+    item_equip_dupe: string,
+    item_equip_success: string,
   },
 }
 

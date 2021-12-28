@@ -21,10 +21,28 @@ export const rooms = [
   ...Void.rooms,
 ]
 
+export function getRoom(roomNo: number): null | Room {
+  for (const room of rooms) {
+    if (room.roomNo == roomNo) {
+      return room
+    }
+  }
+  return null
+}
+
 export const items = [
   ...Lenuve.items,
   ...Void.items,
 ]
+
+export function getItem(itemNo: number): null | Item {
+  for (const item of items) {
+    if (item.itemNo == itemNo) {
+      return item
+    }
+  }
+  return null
+}
 
 // Use this function to create an initial game state. Implicit return type is intentional. It helps
 // define the GameState interface.
@@ -68,7 +86,7 @@ export interface Menu {
   action: Action,
 }
 
-export type ActionResult = undefined | null | LangMap<Narration | Scene>
+export type ActionResult = undefined | null | void | LangMap<Narration | Scene>
 
 export interface Item {
   itemNo: number,
@@ -94,5 +112,5 @@ interface StatsOptional {
 export interface EquipmentStats extends StatsOptional {
   // Only one piece of equipment in a singleton category may be equipped. For example, the player
   // may only equip a single weapon.
-  singletonCategory?: 'weapon' | 'gloves',
+  singletonCategory?: 'weapon' | 'head' | 'gloves',
 }

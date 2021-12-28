@@ -1,4 +1,4 @@
-import { GameState, Room, Item, langmap, Thing } from '../index.js'
+import { GameState, Room, Item, langmap, Thing, EquipmentStats } from '../index.js'
 import { stateAddItem } from '../../game.js'
 
 export function state() {
@@ -33,6 +33,23 @@ const itemGrayCap = {
   },
 };
 items.push(itemGrayCap)
+
+// IDK why, but I have to put the type here or else it gets confused about singletonCategory
+// in equipmentStats.
+const itemSimpleCrown: Item = {
+  itemNo: 1_001,
+  name: langmap({
+    enus: `Simple Crown`,
+  }),
+  description: langmap({
+    enus: `It's a simple metallic crown.`,
+  }),
+  equipmentStats: {
+    singletonCategory: 'head',
+    defense: 1,
+  },
+}
+items.push(itemSimpleCrown)
 
 rooms.push({
   roomNo: 1_000,

@@ -100,13 +100,14 @@ export interface ButtonGridLayoutAction {
   do?: () => any,
   options?: Array<ButtonGridLayoutAction>,
 }
-type ButtonGridLayoutControl = 'none' | 'look' | 'lookat' | 'use' | 'talk' | 'get'
+type ButtonGridLayoutControl = 'none' | 'look' | 'lookat' | 'use' | 'talk' | 'get' | 'item'
 // Button Grid Main Buttons
 const BG_LOOK = 0
 const BG_LOOK_AT = 1
 const BG_USE = 2
 const BG_TALK = 3
 const BG_GET = 4
+const BG_ITEM = 5
 // Button Grid Menu Navigation Buttons
 const BGM_LEFT = 6
 const BGM_CLOSE = 7
@@ -117,6 +118,7 @@ export interface ButtonGridLayout {
   use: Array<ButtonGridLayoutAction>,
   talk: Array<ButtonGridLayoutAction>,
   get: Array<ButtonGridLayoutAction>,
+  items: Array<ButtonGridLayoutAction>,
 }
 
 export class ButtonGridMenu {
@@ -235,6 +237,8 @@ export class ButtonGrid {
         button.innerText = this.game.strings.buttonGrid.talk
       } else if (i == BG_GET) {
         button.innerText = this.game.strings.buttonGrid.get
+      } else if (i == BG_ITEM) {
+        button.innerText = this.game.strings.buttonGrid.item
       } else {
         button.innerText = ''
       }
@@ -254,6 +258,8 @@ export class ButtonGrid {
       return 'talk'
     } else if (buttonIndex == BG_GET) {
       return 'get'
+    } else if (buttonIndex == BG_ITEM) {
+      return 'item'
     }
     return 'none'
   }
@@ -274,6 +280,8 @@ export class ButtonGrid {
       this.openTalkMenu()
     } else if (action == 'get') {
       this.openGetMenu()
+    } else if (action == 'item') {
+      this.openItemMenu()
     }
   }
 
@@ -305,8 +313,15 @@ export class ButtonGrid {
     if (this.layout == null) {
       return
     }
-    const talk: Array<ButtonGridLayoutAction> = []
     this.menu = new ButtonGridMenu(this, this.menu, this.layout.talk)
+    this.updateButtons()
+  }
+
+  openItemMenu() {
+    if (this.layout == null) {
+      return
+    }
+    this.menu = new ButtonGridMenu(this, this.menu, this.layout.items)
     this.updateButtons()
   }
 }
