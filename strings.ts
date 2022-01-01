@@ -29,11 +29,11 @@ class StringsActions {
     // "You pick up a big sword." which is lower cased because it's not a proper noun and the item definition would have Big Sword as the name.
     // "You pick up the big sword." When and how to distinguish between these?
     // I want each language to feel natural in the narrative. 
-    return langmap({
-      enus: `You pick up ${ item.name.get(lang.langID) }.`,
-      // LANG-DEDE
-      // LANG-ZHCN
-    })
+    switch (lang.langID) {
+      case 'enus': return `You pick up ${ item.name.get(lang.langID) }.`
+      case 'dede': return '' // LANG-DEDE
+      case 'zhcn': return '' // LANG-ZHCN
+    }
   }
 }
 

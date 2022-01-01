@@ -329,7 +329,9 @@ export class Game {
   doAction(action: Action) {
     if (typeof action === 'function') {
       const result = action(this.state)
-      if (result) {
+      if (typeof result === 'string') {
+        this.narrate(result)
+      } else if (result) {
         // TODO: Why can I pass just result without a type error?
         this.narrate(result.get(lang.langID))
       }

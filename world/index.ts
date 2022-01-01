@@ -86,7 +86,7 @@ export interface Menu {
   action: Action,
 }
 
-export type ActionResult = undefined | null | void | LangMap<Narration | Scene>
+export type ActionResult = undefined | null | void | LangMap<Narration | Scene> | string
 
 export interface Item {
   itemNo: number,
