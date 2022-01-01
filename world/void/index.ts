@@ -1,10 +1,17 @@
 import { GameState, Room, Item, langmap, Thing, EquipmentStats } from '../index.js'
 import { stateAddItem } from '../../game.js'
+import { strings } from '../../strings.js'
+
+function stateItems() {
+  return {
+    grayCap1: false,
+  }
+}
 
 export function state() {
   return {
+    items: stateItems(),
     redRoom: {
-      grayCapPickedUp: false,
     },
   }
 }
@@ -17,6 +24,23 @@ function makeThings(setupFunction: (state: GameState, things: Array<Thing>) => a
     const things: Array<Thing> = []
     setupFunction(state, things)
     return things
+  }
+}
+
+function makePickupItem(items: ReturnType<typeof stateItems>, things: Array<Thing>, item: Item, stateItemsKey: keyof ReturnType<typeof stateItems>) {
+  if (!items.grayCap1) {
+    things.push({
+      name: item.name,
+      description: item.description,
+      get: {
+        text: item.name,
+        action: (state: GameState) => {
+          state.void.items[stateItemsKey] = true
+          stateAddItem(state, item.itemNo)
+          return strings.actions.youPickUpItem(item)
+        },
+      },
+    })
   }
 }
 
@@ -59,7 +83,7 @@ rooms.push({
   description: langmap({
     enus: `You are in a square, red room. The floor is covered with a stiff, beige carpet.
           There are no windows, but there is a doorway on one wall and a rusty light switch
-          on the other`, 
+          on the other.`, 
   }),
   things: makeThings((state, things) => {
     things.push({
@@ -76,22 +100,7 @@ rooms.push({
         toRoomNo: 1_001,
       },
     })
-    if (!state.void.redRoom.grayCapPickedUp) {
-      things.push({
-        name: itemGrayCap.name,
-        description: itemGrayCap.description,
-        get: {
-          text: itemGrayCap.name,
-          action: (state) => {
-            state.void.redRoom.grayCapPickedUp = true
-            stateAddItem(state, itemGrayCap.itemNo)
-            return langmap({
-              enus: `You pick up the gray cap.`,
-            })
-          },
-        },
-      })
-    }
+    makePickupItem(state.void.items, things, itemGrayCap, 'grayCap1')
   }),
 })
 

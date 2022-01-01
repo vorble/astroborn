@@ -86,11 +86,8 @@
     </div>
   </div>
   <script type="module">
-    import { start } from './game.js'
-    start().catch((err) => {
-      document.getElementsByTagName('body')[0].innerHTML = 'STARTUP ERROR: ' + err.message
-      console.error(err)
-    })
+    import { Game } from './game.js'
+    window.game = new Game()
   </script>
 </body>
 </html>

@@ -1,7 +1,8 @@
 import { ButtonBar, ButtonGrid, ButtonGridLayoutAction } from './buttons.js'
-import { LangID, LangMap, lookupLangID } from './lang.js'
-import { getStrings, StringTable } from './strings.js'
+import * as lang from './lang.js'
+import { LangMap } from './lang.js'
 import { Narration, Scene } from './scene.js'
+import { strings } from './strings.js'
 
 import * as world from './world/index.js'
 import { Menu, Room, Thing, ThingExit, Action, Item } from './world/index.js'
@@ -32,25 +33,14 @@ export function stateAddItem(state: GameState, itemNo: number) {
   state.player.items.push(itemNo)
 }
 
-export async function start() {
-  const langID = lookupLangID(window.navigator.languages)
-  const strings = await getStrings(langID)
-  const game = new Game(langID, strings)
-  ;(window as any).game = game // ; is necessary
-}
-
 export class Game {
-  langID: LangID
   callPassState: number
-  strings: StringTable
   state: GameState
   bar: ButtonBar
   grid: ButtonGrid
 
-  constructor(langID: LangID, strings: StringTable) {
-    this.langID = langID
+  constructor() {
     this.callPassState = 0
-    this.strings = strings
     this.state = {
       ...world.state(),
       player: {
@@ -142,13 +132,13 @@ export class Game {
 
   _makeMenu(menu: Menu): ButtonGridLayoutAction {
     const result: ButtonGridLayoutAction = {
-      text: menu.text.get(this.langID),
+      text: menu.text.get(lang.langID),
     }
     const action = menu.action
     if (typeof action === 'function') {
       result.do = this._callPassAction(action)
     } else if (action instanceof LangMap) {
-      result.do = () => this._callPassNarrate(action.get(this.langID))
+      result.do = () => this._callPassNarrate(action.get(lang.langID))
     } else if (Array.isArray(action)) {
       result.options = action.map((action) => this._makeMenu(action))
     } else {
@@ -179,31 +169,31 @@ export class Game {
       }
       const options = [
         {
-          text: this.strings.buttonGrid.item_look_at,
-          do: this._callPassNarrate(item.description.get(this.langID)),
+          text: strings.buttonGrid.itemLookAt,
+          do: this._callPassNarrate(item.description.get(lang.langID)),
         },
       ]
       if (typeof item.use !== 'undefined') {
         options.push({
-          text: this.strings.buttonGrid.item_use,
+          text: strings.buttonGrid.itemUse,
           do: this._callPassAction(item.use),
         })
       }
       if (typeof item.equipmentStats !== 'undefined') {
         if (isEquipped) {
           options.push({
-            text: this.strings.buttonGrid.item_unequip,
+            text: strings.buttonGrid.itemUnequip,
             do: this._callPassUnequip(item),
           })
         } else {
           options.push({
-            text: this.strings.buttonGrid.item_equip,
+            text: strings.buttonGrid.itemEquip,
             do: this._callPassEquip(item),
           })
         }
       }
       items.push({
-        text: item.name.get(this.langID),
+        text: (isEquipped ? '@' : '') + item.name.get(lang.langID),
         options,
       })
     }
@@ -215,10 +205,10 @@ export class Game {
     }
 
     for (const thing of things) {
-      const name = thing.name.get(this.langID)
+      const name = thing.name.get(lang.langID)
       lookAt.push({
         text: name,
-        do: this._callPassNarrate(thing.description.get(this.langID)),
+        do: this._callPassNarrate(thing.description.get(lang.langID)),
       })
       if (thing.exit) {
         go.push({
@@ -294,11 +284,11 @@ export class Game {
     }
     let full = claimed && this.state.player.equipment.length >= 3
     if (full) {
-      this.narrate(this.strings.buttonGrid.item_equip_full)
+      this.narrate(strings.buttonGrid.itemEquipFull)
     } else if (dupe) {
-      this.narrate(this.strings.buttonGrid.item_equip_dupe)
+      this.narrate(strings.buttonGrid.itemEquipDupe)
     } else if (claimed) {
-      this.narrate(this.strings.buttonGrid.item_equip_success)
+      this.narrate(strings.buttonGrid.itemEquipSuccess)
       this.state.player.equipment.push(item.itemNo)
       this.state.player.items = keepItems
     }
@@ -325,14 +315,14 @@ export class Game {
   doLook() {
     const room = this.getPlayerRoom()
     const description = this.getRoomDescription(room)
-    this.narrate(description.get(this.langID))
+    this.narrate(description.get(lang.langID))
   }
 
   doTakeExit(exit: ThingExit) {
     if (typeof exit.toRoomNo === 'number') {
       this.state.player.roomNo = exit.toRoomNo
     }
-    this.narrate(exit.useNarration.get(this.langID))
+    this.narrate(exit.useNarration.get(lang.langID))
     this.updateActions(/*resetPage=*/true)
   }
 
@@ -341,7 +331,7 @@ export class Game {
       const result = action(this.state)
       if (result) {
         // TODO: Why can I pass just result without a type error?
-        this.narrate(result.get(this.langID))
+        this.narrate(result.get(lang.langID))
       }
     }
     this.updateActions(/*resetPage=*/true)

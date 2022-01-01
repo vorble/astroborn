@@ -1,4 +1,5 @@
 import { Game } from './game.js'
+import { strings } from './strings.js'
 
 export interface ButtonBarAction {
   text: string
@@ -228,17 +229,17 @@ export class ButtonGrid {
     for (let i = 0; i < this.buttons.length; ++i) {
       const button = this.buttons[i]
       if (i == BG_LOOK) {
-        button.innerText = this.game.strings.buttonGrid.look
+        button.innerText = strings.buttonGrid.look
       } else if (i == BG_LOOK_AT) {
-        button.innerText = this.game.strings.buttonGrid.lookAt
+        button.innerText = strings.buttonGrid.lookAt
       } else if (i == BG_USE) {
-        button.innerText = this.game.strings.buttonGrid.use
+        button.innerText = strings.buttonGrid.use
       } else if (i == BG_TALK) {
-        button.innerText = this.game.strings.buttonGrid.talk
+        button.innerText = strings.buttonGrid.talk
       } else if (i == BG_GET) {
-        button.innerText = this.game.strings.buttonGrid.get
+        button.innerText = strings.buttonGrid.get
       } else if (i == BG_ITEM) {
-        button.innerText = this.game.strings.buttonGrid.item
+        button.innerText = strings.buttonGrid.item
       } else {
         button.innerText = ''
       }

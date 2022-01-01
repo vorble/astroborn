@@ -67,7 +67,7 @@ export function langmapFull<T>(langs: LangMapInputFull<T>): LangMap<T> {
   return new LangMap<T>(langs)
 }
 
-export function lookupLangID(lang: any): LangID {
+function lookupLangID(lang: any): LangID {
   if (!Array.isArray(lang)) {
     lang = [lang]
   }
@@ -81,3 +81,5 @@ export function lookupLangID(lang: any): LangID {
   console.error(`Couldn\'t map language ${ lang }! Spinning the wheel...`)
   return LANGS[Math.floor(Math.random() * LANGS.length)]
 }
+
+export let langID  = lookupLangID(window.navigator.languages)
