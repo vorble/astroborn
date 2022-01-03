@@ -1,5 +1,4 @@
 import * as lang from './lang.js'
-import { langmap } from './lang.js'
 import { Item } from './world/index.js'
 
 class Strings {

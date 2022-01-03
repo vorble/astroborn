@@ -54,7 +54,7 @@ export function state() {
   }
 }
 
-export const startRoomNo = Void.rooms[0].roomNo
+export const startRoomNo = Lenuve.rooms[0].roomNo
 
 export interface Room {
   roomNo: number,
