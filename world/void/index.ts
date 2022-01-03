@@ -1,6 +1,4 @@
-import { GameState, Room, Item, langmap, Thing, EquipmentStats } from '../index.js'
-import { stateAddItem } from '../../game.js'
-import { strings } from '../../strings.js'
+import { GameState, Room, Item, langmap, Thing, makePickupItem } from '../index.js'
 
 function stateItems() {
   return {
@@ -24,23 +22,6 @@ function makeThings(setupFunction: (state: GameState, things: Array<Thing>) => a
     const things: Array<Thing> = []
     setupFunction(state, things)
     return things
-  }
-}
-
-function makePickupItem(items: ReturnType<typeof stateItems>, things: Array<Thing>, item: Item, stateItemsKey: keyof ReturnType<typeof stateItems>) {
-  if (!items.grayCap1) {
-    things.push({
-      name: item.name,
-      description: item.description,
-      get: {
-        text: item.name,
-        action: (state: GameState) => {
-          state.void.items[stateItemsKey] = true
-          stateAddItem(state, item.itemNo)
-          return strings.actions.youPickUpItem(item)
-        },
-      },
-    })
   }
 }
 
@@ -85,8 +66,8 @@ rooms.push({
           There are no windows, but there is a doorway on one wall and a rusty light switch
           on the other.`, 
   }),
-  things: makeThings((state, things) => {
-    things.push({
+  things: (state) => [
+    {
       name: langmap({
         enus: `Doorway`,
       }),
@@ -99,9 +80,9 @@ rooms.push({
         }),
         toRoomNo: 1_001,
       },
-    })
-    makePickupItem(state.void.items, things, itemGrayCap, 'grayCap1')
-  }),
+    },
+    ...makePickupItem(itemGrayCap, state.void.items, 'grayCap1'),
+  ],
 })
 
 rooms.push({

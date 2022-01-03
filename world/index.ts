@@ -1,6 +1,7 @@
 import { LangID, LangMap } from '../lang.js'
-import { GameState, FromGameState } from '../game.js'
+import { GameState, FromGameState, stateAddItem } from '../game.js'
 import { Narration, Scene } from '../scene.js'
+import { strings } from '../strings.js'
 
 export {
   LangMap,
@@ -113,4 +114,22 @@ export interface EquipmentStats extends StatsOptional {
   // Only one piece of equipment in a singleton category may be equipped. For example, the player
   // may only equip a single weapon.
   singletonCategory?: 'weapon' | 'head' | 'gloves',
+}
+
+export function makePickupItem<R>(item: Item, items: Record<keyof R, boolean>, stateItemsKey: keyof R): Array<Thing> {
+  if (items[stateItemsKey]) {
+    return []
+  }
+  return [{
+    name: item.name,
+    description: item.description,
+    get: {
+      text: item.name,
+      action: (state: GameState) => {
+        items[stateItemsKey] = true
+        stateAddItem(state, item.itemNo)
+        return strings.actions.youPickUpItem(item)
+      },
+    },
+  }]
 }
