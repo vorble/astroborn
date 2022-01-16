@@ -95,6 +95,54 @@ rooms.push({
         },
       },
     },
+    {
+      name: langmap({
+        enus: `Common Wall`,
+      }),
+      description: langmap({
+        enus: `The long wall is shared with the adjoining room.`,
+      }),
+      use: {
+        text: langmap({
+          enus: `Common Wall`,
+        }),
+        action: (state) => langmap({
+          enus: `Getting close to the wall to listen, you can hear a calm, muffled voice and the indistinct patter of activity.`,
+        }),
+      },
+    },
+    {
+      name: langmap({
+        enus: `Rack`,
+      }),
+      description: langmap({
+        enus: `Affixed to the wall, small shelves and pegs offer a place to put clothes.`,
+      }),
+    },
+    {
+      name: langmap({
+        enus: `Drawer`,
+      }),
+      description: langmap({
+        enus: `It's a worn, wooden set of drawers that has been used by many over the years.`,
+      }),
+    },
+    {
+      name: langmap({
+        enus: `Slit`,
+      }),
+      description: langmap({
+        enus: `A steady beam of light illuminates a column of dust in the air, laying as a skewed line across the floor and straight up the adjacent wall.`,
+      }),
+      use: {
+        text: langmap({
+          enus: 'Slit',
+        }),
+        action: (state) => langmap({
+          enus: `You peer through the slit into the outdoors. You see the back meadow and the top of the latrine some ways in the distance.`,
+        }),
+      },
+    },
     ...(
       state.lenuve.bed_made ? makePickupItem(itemWindBandana, state.lenuve.items, 'windBandana') : []
     ),
@@ -138,5 +186,6 @@ rooms.push({
     // TODO: Exit into woods.
     // TODO: Greg and Maun talking.
     // TODO: Looking at things around. Grass?
+    // TODO: Way to get behind row house. Close to the latrine.
   ],
 })

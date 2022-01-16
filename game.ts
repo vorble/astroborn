@@ -223,10 +223,10 @@ export class Game {
         })
       }
       if (thing.use) {
-        use[0] = this._makeMenu(thing.use)
+        use.push(this._makeMenu(thing.use))
       }
       if (thing.talk) {
-        talk[0] = this._makeMenu(thing.talk)
+        talk.push(this._makeMenu(thing.talk))
       }
     }
 
