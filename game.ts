@@ -138,7 +138,7 @@ export class Game {
     if (typeof action === 'function') {
       result.do = this._callPassAction(action)
     } else if (action instanceof LangMap) {
-      result.do = () => this._callPassNarrate(action.get(lang.langID))
+      result.do = this._callPassNarrate(action.get(lang.langID))
     } else if (Array.isArray(action)) {
       result.options = action.map((action) => this._makeMenu(action))
     } else {

@@ -182,9 +182,43 @@ rooms.push({
         enus: `It's a series of row houses built from dark wooden planks, but are greyed and faded from years in the sun.`,
       }),
     },
+    {
+      // TODO: Greg and Maun talking. Unfinished.
+      name: langmap({
+        enus: `Greg and Maun`,
+      }),
+      description: langmap({
+        enus: `Greg and Maun are relaxed on the lawn, talking and joking with smiles on their faces.`,
+      }),
+      talk: {
+        text: langmap({
+          enus: `Greg and Maun`,
+        }),
+        action: [
+          {
+            text: langmap({
+              enus: `Funny?`,
+            }),
+            action: (state) => langmap({
+              enus: `You ask about what's so funny. Greg replies with a smile,
+              "Maun was telling me about the woodcutting he was doing yesterday."`,
+                // TODO: Maun came across a funny creature, somewhat bumbling and comical,
+                // it ran away and made the funniest sound. Then they got on to other subjects and
+                // are carrying on.
+            }),
+          },
+        ],
+        /*langmap({
+          enus: `You ask about what's so funny. Greg replies with a smile,
+          "Maun was telling me about the woodcutting he was doing yesterday."`,
+            // TODO: Maun came across a funny creature, somewhat bumbling and comical,
+            // it ran away and made the funniest sound. Then they got on to other subjects and
+            // are carrying on.
+        }),*/
+      },
+    },
     // TODO: Exit to common area.
     // TODO: Exit into woods.
-    // TODO: Greg and Maun talking.
     // TODO: Looking at things around. Grass?
     // TODO: Way to get behind row house. Close to the latrine.
   ],
