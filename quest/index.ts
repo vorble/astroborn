@@ -4,13 +4,13 @@ import { Thing } from '../world/index.js'
 
 export function state() {
   return {
-    testFlag: false,
+    testFlag: true,
   }
 }
 
 export function getThings(state: GameState, roomNo: number): Array<Thing> {
   // This is just some temporary stuff for now. The real implementation should look up the room in
-  // some sort of quest table which should have functions for 
+  // some sort of quest table which should have functions for things like this:
   if (state.quest.testFlag) {
     return []
   } else {
