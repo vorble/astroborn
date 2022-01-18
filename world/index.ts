@@ -66,6 +66,7 @@ export interface Room {
 export interface Thing {
   name: LangMap<string>,
   description: LangMap<string>,
+  isHereText?: LangMap<string>,
   exit?: ThingExit,
   use?: Menu,
   talk?: Menu,

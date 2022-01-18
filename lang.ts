@@ -67,6 +67,14 @@ export function langmapFull<T>(langs: LangMapInputFull<T>): LangMap<T> {
   return new LangMap<T>(langs)
 }
 
+export function joinSentences(langID: LangID, items: string[]): string {
+  switch (langID) {
+    case 'enus': return items.join(' ');
+    case 'dede': return items.join(' ');
+    case 'zhcn': return items.join();
+  }
+}
+
 function lookupLangID(lang: any): LangID {
   if (!Array.isArray(lang)) {
     lang = [lang]

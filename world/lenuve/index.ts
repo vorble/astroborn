@@ -10,7 +10,6 @@ export function state() {
   return {
     items: stateItems(),
     bed_made: false,
-    fireflies_caught: 0,
   }
 }
 
@@ -156,7 +155,7 @@ rooms.push({
   }),
   description: langmap({
     enus: `There is a worn, sandy walkway through the grassy plot, running between a larger causeway and a series of row houses.
-    The grass is short and worn from foot traffic. Greg and Maun are raucously joking in the lawn.
+    The grass is short and worn from foot traffic.
     A small, traveled opening is on the tree line.`,
   }),
   things: [
@@ -187,8 +186,11 @@ rooms.push({
       name: langmap({
         enus: `Greg and Maun`,
       }),
+      isHereText: langmap({
+        enus: `Greg and Maun are raucously joking in the lawn.`,
+      }),
       description: langmap({
-        enus: `Greg and Maun are relaxed on the lawn, talking and joking with smiles on their faces.`,
+        enus: `Greg and Maun are riled up on the lawn, talking and joking with smiles on their faces.`,
       }),
       talk: {
         text: langmap({

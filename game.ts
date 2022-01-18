@@ -1,6 +1,8 @@
 import { ButtonBar, ButtonGrid, ButtonGridLayoutAction } from './buttons.js'
 import * as lang from './lang.js'
 import { LangMap } from './lang.js'
+import * as quest from './quest/index.js'
+import { QuestState } from './quest/index.js'
 import { Narration, Scene } from './scene.js'
 import { strings } from './strings.js'
 
@@ -25,6 +27,7 @@ interface Player {
 
 type GameStateFromWorlds = ReturnType<typeof world.state>
 export interface GameState extends GameStateFromWorlds {
+  quest: QuestState,
   player: Player,
 }
 export type FromGameState<T> = T | ((state: GameState) => T)
@@ -43,6 +46,7 @@ export class Game {
     this.callPassState = 0
     this.state = {
       ...world.state(),
+      quest: quest.state(),
       player: {
         roomNo: world.startRoomNo,
         items: [],
@@ -74,15 +78,24 @@ export class Game {
     return room
   }
 
-  getRoomDescription(room: Room): LangMap<string> {
-    return typeof room.description === 'function' ? room.description(this.state) : room.description
+  getRoomDescription(room: Room): string {
+    const description = (
+      typeof room.description === 'function' ? room.description(this.state) : room.description
+    ).get(lang.langID)
+    const things = this.getRoomThings(room)
+    const extra = []
+    for (const thing of things) {
+      if (thing.isHereText != null) {
+        extra.push(thing.isHereText.get(lang.langID));
+      }
+    }
+    return lang.joinSentences(lang.langID, [description, ...extra])
   }
 
   getRoomThings(room: Room): Array<Thing> {
-    if (typeof room.things === 'function') {
-      return room.things(this.state)
-    } 
-    return room.things
+    let things = typeof room.things === 'function' ? room.things(this.state) : room.things
+    let thingsForQuests = quest.getThings(this.state, room.roomNo)
+    return things.concat(thingsForQuests)
   }
 
   _callPassExit(exit: ThingExit): () => void {
@@ -315,7 +328,7 @@ export class Game {
   doLook() {
     const room = this.getPlayerRoom()
     const description = this.getRoomDescription(room)
-    this.narrate(description.get(lang.langID))
+    this.narrate(description)
   }
 
   doTakeExit(exit: ThingExit) {
