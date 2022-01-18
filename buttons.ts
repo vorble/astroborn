@@ -142,14 +142,15 @@ export class ButtonGridMenu {
   updateButtons() {
     const availableButtons = (this.buttons.length - 3)
     let actionIndex = this.page * availableButtons
+    const isLastPage = actionIndex + availableButtons >= this.actions.length
     for (let i = 0; i < this.buttons.length; ++i, ++actionIndex) {
       const button = this.buttons[i]
       if (i == BGM_CLOSE) {
         button.innerText = 'X'
       } else if (i == BGM_LEFT) {
-        button.innerText = '<'
+        button.innerText = this.page == 0 ? '' : '<'
       } else if (i == BGM_RIGHT) {
-        button.innerText = '>'
+        button.innerText = isLastPage ? '' : '>'
       } else if (actionIndex < this.actions.length) {
         button.innerText = this.actions[actionIndex].text
       } else {
