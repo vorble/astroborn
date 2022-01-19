@@ -69,9 +69,9 @@ export function langmapFull<T>(langs: LangMapInputFull<T>): LangMap<T> {
 
 export function joinSentences(langID: LangID, items: string[]): string {
   switch (langID) {
-    case 'enus': return items.join(' ');
-    case 'dede': return items.join(' ');
-    case 'zhcn': return items.join();
+    case 'enus': return items.join(' ')
+    case 'dede': return items.join(' ')
+    case 'zhcn': return items.join()
   }
 }
 
@@ -80,13 +80,14 @@ function lookupLangID(lang: any): LangID {
     lang = [lang]
   }
   for (const l of lang) {
-    switch (l) {
-      case 'en-US': return 'enus'
-      case 'de-DE': return 'dede'
-      case 'zh-CN': return 'zhcn'
+    switch (l.toLowerCase()) {
+      case 'en-us': return 'enus'
+      case 'de-de': return 'dede'
+      case 'zh-cn': return 'zhcn'
     }
   }
   console.error(`Couldn\'t map language ${ lang }! Spinning the wheel...`)
+  window.location.hash = lang
   return LANGS[Math.floor(Math.random() * LANGS.length)]
 }
 

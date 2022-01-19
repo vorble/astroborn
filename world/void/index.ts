@@ -36,7 +36,7 @@ const itemGrayCap = {
   equipmentStats: {
     defense: 1,
   },
-};
+}
 items.push(itemGrayCap)
 
 // IDK why, but I have to put the type here or else it gets confused about singletonCategory

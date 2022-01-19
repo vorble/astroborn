@@ -86,7 +86,7 @@ export class Game {
     const extra = []
     for (const thing of things) {
       if (thing.isHereText != null) {
-        extra.push(thing.isHereText.get(lang.langID));
+        extra.push(thing.isHereText.get(lang.langID))
       }
     }
     return lang.joinSentences(lang.langID, [description, ...extra])

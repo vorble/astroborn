@@ -38,7 +38,7 @@ const itemWindBandana = {
   equipmentStats: {
     defense: 1,
   },
-};
+}
 items.push(itemWindBandana)
 
 rooms.push({
