@@ -7,6 +7,7 @@ export function state() {
     testFlag: true,
   }
 }
+export type QuestState = ReturnType<typeof state>
 
 export function getThings(state: GameState, roomNo: number): Array<Thing> {
   // This is just some temporary stuff for now. The real implementation should look up the room in
@@ -27,5 +28,3 @@ export function getThings(state: GameState, roomNo: number): Array<Thing> {
     }]
   }
 }
-
-export type QuestState = ReturnType<typeof state>

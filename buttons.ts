@@ -109,6 +109,8 @@ const BG_USE = 2
 const BG_TALK = 3
 const BG_GET = 4
 const BG_ITEM = 5
+// Button Grid Positional Buttons (Overlaps Above)
+const BG_CENTER = 4
 // Button Grid Menu Navigation Buttons
 const BGM_LEFT = 6
 const BGM_CLOSE = 7
@@ -120,6 +122,7 @@ export interface ButtonGridLayout {
   talk: Array<ButtonGridLayoutAction>,
   get: Array<ButtonGridLayoutAction>,
   items: Array<ButtonGridLayoutAction>,
+  sceneActive: boolean,
 }
 
 export class ButtonGridMenu {
@@ -225,11 +228,15 @@ export class ButtonGrid {
     if (this.menu != null) {
       return this.menu.updateButtons()
     } else if (this.layout == null) {
-      return ''
+      return
     }
     for (let i = 0; i < this.buttons.length; ++i) {
       const button = this.buttons[i]
-      if (i == BG_LOOK) {
+      if (this.layout.sceneActive && i == BG_CENTER) {
+        button.innerText = strings.buttonGrid.sceneNext
+      } else if (this.layout.sceneActive) {
+        button.innerText = ''
+      } else if (i == BG_LOOK) {
         button.innerText = strings.buttonGrid.look
       } else if (i == BG_LOOK_AT) {
         button.innerText = strings.buttonGrid.lookAt
@@ -269,6 +276,8 @@ export class ButtonGrid {
   doAction(buttonIndex: number) {
     if (this.menu != null) {
       return this.menu.doAction(buttonIndex)
+    } else if (this.layout != null && this.layout.sceneActive) {
+      return this.game.progressScene()
     }
     const action = this.getAction(buttonIndex)
     if (action == 'none') {

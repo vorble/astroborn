@@ -37,6 +37,14 @@ class StringsActions {
 }
 
 class StringsButtonGrid {
+  public get sceneNext() {
+    switch (lang.langID) {
+      case 'enus': return 'Next'
+      case 'dede': return '' // LANG-DEDE
+      case 'zhcn': return '' // LANG-ZHCN
+    }
+  }
+
   public get look() {
     switch (lang.langID) {
       case 'enus': return 'Look'
