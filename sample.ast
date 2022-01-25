@@ -1,0 +1,145 @@
+(module quest 1
+  (state @pilots_crashed false)
+
+  (room 1000
+    (if @pilots_crashed (each
+      (thing
+        (name (lm
+          (enus `Pilot 1`)
+        ))
+        (description (lm
+          (enus `Dressed in a solid green with various lines and straps coming from the uniform.`)
+        ))
+      )
+    ))
+  )
+)
+
+(module zone 1
+  (name (lm
+    (enus `Lenuve`)
+  ))
+
+  # State for the zone encompassing several rooms are prefixed with %.
+  (state %fireflies_caught 0)
+)
+
+(module room 1000
+  (zone 1) # Required if you want to access %anything.
+  (name (lm
+    (enus `Row Room`)
+  ))
+  (description (lm
+    (enus `You are in dimly lit, permanent room built from fine, dark planks that let in only
+      tendrils of light. A bed, some racks, and drawers line the walls. A thatch door is on the
+      narrow wall. On the other narrow wall, a thin window lets in a ray of sunlight.`)
+  ))
+
+  # State for the room are prefixed with $.
+  (state $bed_made 0)
+  (state $got_wind_bandana 0)
+
+  (thing 
+    (name (lm
+      (enus `Thatch Door`)
+    ))
+    (description (lm
+      (enus `It's woven from mature thera grass blades with hinges on one side that allow
+        door to open into the room.`)
+    ))
+    (exit (each
+      (narrate (lm
+        (enus `You go through the door and down the hallway to enter the outdoors.`)
+      ))
+      (goto 1001)
+    ))
+  )
+
+  (thing
+    (name (lm
+      (enus `Common Wall`)
+    ))
+    (description (lm
+      (enus `The long wall is shared with the adjoining room.`)
+    ))
+    (use (each
+      (narrate (lm
+        (enus `Getting close to the wall to listen, you can hear a calm, muffled voice and the indistinct patter of activity.`)
+      ))
+      (scene
+        (lm
+          (enus `Thing 1 happens.`)
+        )
+        (lm
+          (enus `Thing 2 happens.`)
+        )
+        (lm
+          (enus `Thing 3 happens.`)
+        )
+      )
+    ))
+  )
+
+  (thing
+    (name (lm
+      (enus `Rack`)
+    ))
+    ((description (lm
+      (enus `Affixed to the wall, small shelves and pegs offer a place to put clothes.`)
+    ))
+  )
+
+  (thing
+    (name (lm
+      (enus `Drawer`)
+    ))
+    (description (lm
+      (enus `It's a worn, wooden set of drawers that has been used by many over the years.`)
+    ))
+  )
+
+  (thing
+    (name (lm
+      (enus `Slit`)
+    ))
+    (description (lm
+      (enus `A steady beam of light illuminates a column of dust in the air, laying as a skewed line across the floor and straight up the adjacent wall.`)
+    ))
+    (use (each
+      (narrate (lm
+        (enus `You peer through the slit into the outdoors. You see the back meadow and the top of the latrine some ways in the distance.`)
+      ))
+    ))
+  )
+
+  (thing
+    (name (lm
+      (enus `Bed`)
+    ))
+    (description (if ($bed_made)
+      (lm
+        (enus `It's purposefully tidy.`)
+      )
+      (lm
+        (enus `It's not quite neat with the linens pushed to one side as if the last occupant
+          did not get much rest.`)
+      )
+    ))
+    (use (if $bed_made
+      (each
+        (narrate (lm
+          (enus `The bed is already tidy.`)
+        ))
+      )
+      (each
+        (set $bed_made 1)
+        (narrate (lm
+          (enus `You pull the linens evenly over the mattress. A bandana was in the mess.`)
+        ))
+      )
+    ))
+  )
+
+  (if $bed_made (thing_item 1000 $got_wind_bandana))
+)
+
