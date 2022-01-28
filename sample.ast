@@ -1,5 +1,5 @@
 (module quest 1
-  (state @pilots_crashed false)
+  (state @pilots_crashed 0)
 
   (room 1000
     (if @pilots_crashed (each
