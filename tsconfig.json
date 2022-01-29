@@ -11,6 +11,7 @@
     "**/*.ts"
   ],
   "exclude": [
+    "lang.ts",
     "parse.ts"
   ]
 }

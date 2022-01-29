@@ -3,9 +3,9 @@
     "target": "es2020",
     "module": "es2020",
     "moduleResolution": "node",
-    "outDir": "build",
+    "outDir": "out",
     "strict": true,
-    "sourceMap": true
+    "sourceMap": false
   },
   "include": [
     "parse.ts"

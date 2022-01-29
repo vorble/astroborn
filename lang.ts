@@ -91,4 +91,12 @@ function lookupLangID(lang: any): LangID {
   return LANGS[Math.floor(Math.random() * LANGS.length)]
 }
 
-export let langID  = lookupLangID(window.navigator.languages)
+export function toLangID(langID: string): false | LangID {
+  if (LANGS.indexOf(langID as LangID) < 0) {
+    return false
+  }
+  return langID as LangID
+}
+
+// When not running in the browser, it's running the build tools which is supported only in English.
+export let langID = typeof window !== 'undefined' ? lookupLangID(window.navigator.languages) : 'enus'
