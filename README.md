@@ -12,3 +12,12 @@ Make sure TypeScript is installed: `npm install --global typescript`.
 * `make clean` - Clean up the build files.
 * `make release` - Build the release version of the game (does its own clean).
 * `./run` - Build the project and serve it on port 8080. Automatic recompile TypeScript files.
+
+## Work-in-progress
+
+I'm currently working on the parser, but it's weird to run. Run it in the following way:
+
+```
+make world
+node out/parse.mjs
+```

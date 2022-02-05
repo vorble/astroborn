@@ -10,7 +10,7 @@
 
 export type LangID = 'dede' | 'enus' | 'zhcn'
 
-const LANGS: Array<LangID> = ['dede', 'enus', 'zhcn']
+export const LANGS: Array<LangID> = ['dede', 'enus', 'zhcn']
 
 export interface LangMapInput<T> {
   dede?: T
