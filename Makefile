@@ -10,6 +10,7 @@ release: clean tsc-release static-assets
 .PHONY: static-assets
 static-assets:
 	cp index.html build/index.html
+	cp LICENSE build/LICENSE.txt
 
 .PHONY: tsc-debug
 tsc-debug:
