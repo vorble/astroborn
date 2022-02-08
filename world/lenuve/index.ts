@@ -11,6 +11,7 @@ export function state() {
   return {
     items: stateItems(),
     bed_made: false,
+    voyeur: false,
   }
 }
 
@@ -48,9 +49,10 @@ rooms.push({
     enus: `Row Room`,
   }),
   description: langmap({
-    enus: `You are in dimly lit, permanent room built from fine, dark planks that let in only
-    tendrils of light. A bed, some racks, and drawers line the walls. A thatch door is
-    on the narrow wall. On the other narrow wall, a thin window lets in a ray of sunlight.`,
+    enus: `You are in dimly lit, permanent room built from rough-hewn, dark planks that let in only
+    tendrils of light and moist air from the outdoors. A bed, some racks, and drawers line the walls.
+    A thatch door is on the narrow wall. On the other narrow wall, a thin window lets in a ray of
+    sunlight, illuminating the dust in the dank smelling air.`,
   }),
   things: (state) => [
     {
@@ -104,7 +106,7 @@ rooms.push({
         text: langmap({
           enus: `Common Wall`,
         }),
-        action: (state) => langmap({
+        action: langmap({
           enus: `Getting close to the wall to listen, you can hear a calm, muffled voice and the indistinct patter of activity.`,
         }),
       },
@@ -130,13 +132,13 @@ rooms.push({
         enus: `Slit`,
       }),
       description: langmap({
-        enus: `A steady beam of light illuminates a column of dust in the air, laying as a skewed line across the floor and straight up the adjacent wall.`,
+        enus: `A delicate beam of light illuminates a thin blade of dust in the air, laying as a skewed line across the floor and straight up the adjacent wall.`,
       }),
       use: {
         text: langmap({
           enus: 'Slit',
         }),
-        action: (state) => langmap({
+        action: langmap({
           enus: `You peer through the slit into the outdoors. You see the back meadow and the top of the latrine some ways in the distance.`,
         }),
       },
@@ -150,12 +152,13 @@ rooms.push({
 rooms.push({
   roomNo: 2_001,
   name: langmap({
-    enus: `Row Lawn`,
+    enus: `Lawn`,
   }),
   description: langmap({
-    enus: `There is a worn, sandy walkway through the grassy plot, running between a larger
-    causeway and a series of faded row houses made of wood. The grass is short and worn from foot traffic.
-    A small, traveled opening is on the tree line past the meadow.`,
+    enus: `You are on a worn, sandy walkway stretching through the grassy plot, connecting a larger
+    footpath and a series of faded wooden houses constructed in a row. The grass is short and
+    worn from use. A meadow surrounds the lawn and reaches around to the rear of the houses.
+    A small, but traveled opening is on the tree line in the distance, past the meadow.`,
   }),
   things: [
     {
@@ -177,13 +180,27 @@ rooms.push({
         enus: `Meadow`,
       }),
       description: langmap({
-        enus: `A path leads to a meadow of long grass leading toward the forest.`,
+        enus: `Worn grass gives way to a meadow leading toward the forest.`,
       }),
       exit: {
         useNarration: langmap({
           enus: `You go across the lawn and start to push your way through the tall grass.`,
         }),
         toRoomNo: 2_002,
+      },
+    },
+    {
+      name: langmap({
+        enus: `Rear`,
+      }),
+      description: langmap({
+        enus: `A path leads around the houses along the precipice of the longer grass just a short ways out.`,
+      }),
+      exit: {
+        useNarration: langmap({
+          enus: `You go around to the back of the houses.`,
+        }),
+        toRoomNo: 2_003,
       },
     },
     {
@@ -216,11 +233,11 @@ rooms.push({
             action: (state) => langmap({
               enus: new Scene([
                 `You ask about what's so funny. Greg replies with a smile,
-                "Maun was telling me the gopher he saw cutting wood yesterday."`,
+                  "Maun was telling me the gopher he saw cutting wood yesterday."`,
                 `Maun interjects, "Looking at me like this:" He tilts his head and
-                exposes his front teeth, raising his left eyebrow.`,
+                  exposes his front teeth, raising his left eyebrow.`,
                 `Greg and Maun continue their playful banter and make other animalistic
-                motions toward each other.`
+                  motions toward each other.`
               ]),
             }),
           },
@@ -229,7 +246,6 @@ rooms.push({
     },
     // TODO: Exit to common area.
     // TODO: Looking at things around.
-    // TODO: Way to get behind row house. Close to the latrine.
   ],
 })
 
@@ -264,6 +280,73 @@ rooms.push({
       description: langmap({
         enus: `The grass moves gently with a hiss as the waves of wind draw over it.`,
       }),
+    },
+  ],
+})
+
+rooms.push({
+  roomNo: 2_003,
+  name: langmap({
+    enus: `Back Yard`,
+  }),
+  description: langmap({
+    enus: `You are behind the row of houses on a walkway leading to a latrine. Gentle undulations of
+    wind bring a light odorous scent to your nose.`,
+  }),
+  things: [
+    {
+      name: langmap({
+        enus: `Front`,
+      }),
+      description: langmap({
+        enus: `The walkway leads around to the front of the houses.`,
+      }),
+      exit: {
+        useNarration: langmap({
+          enus: `You go along the walkway to the front of the houses.`,
+        }),
+        toRoomNo: 2_001,
+      },
+    },
+    {
+      name: langmap({
+        enus: `Latrine`,
+      }),
+      description: langmap({
+        enus: `A small, enclosed structure hosts an area for relieving oneself in private a short distance away.`,
+      }),
+    },
+    {
+      name: langmap({
+        enus: `Houses`,
+      }),
+      description: langmap({
+        enus: `Each house in the row has a small window.`,
+      }),
+      use: {
+        text: langmap({
+          enus: `Window`,
+        }),
+        action: (state) => {
+          const intro = `You come up to the back of the houses and pull yourself up to peer into the window.`
+          const result = !state.lenuve.voyeur ? langmap({
+            enus: new Scene([
+              intro,
+              `Ria is in the room mending a cloth sack. She doesn't seem to notice you as your shadow does
+                not stretch into the window.`,
+              `Climbing down with a thud, Ria's voice reaches out with startled hesitation "H-Hey!"`,
+            ]),
+          }) : langmap({
+            enus: new Scene([
+              intro,
+              `The room is empty.`,
+              `You climb down.`,
+            ]),
+          })
+          state.lenuve.voyeur = true
+          return result
+        },
+      },
     },
   ],
 })
