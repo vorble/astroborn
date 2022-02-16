@@ -43,6 +43,8 @@ const itemWindBandana = {
 }
 items.push(itemWindBandana)
 
+// TODO: Can I add some items to this room to give the player a sense of who the character is?
+// What is their role in The Cup?
 rooms.push({
   roomNo: 2_000,
   name: langmap({
@@ -156,7 +158,7 @@ rooms.push({
   }),
   description: langmap({
     enus: `You are on a worn, sandy walkway stretching through the grassy plot, connecting a larger
-    footpath and a series of faded wooden houses constructed in a row. The grass is short and
+    road and a series of faded wooden houses constructed in a row. The grass is short and
     worn from use. A meadow surrounds the lawn and reaches around to the rear of the houses.
     A small, but traveled opening is on the tree line in the distance, past the meadow.`,
   }),
@@ -173,6 +175,20 @@ rooms.push({
           enus: `You go through the door and go down the hallway to one of the rooms.`,
         }),
         toRoomNo: 2_000,
+      },
+    },
+    {
+      name: langmap({
+        enus: `Road`,
+      }),
+      description: langmap({
+        enus: `It's a road through the countryside, between the town center and a series of row houses.`,
+      }),
+      exit: {
+        useNarration: langmap({
+          enus: `You go down the road toward the countryside.`,
+        }),
+        toRoomNo: 2_004,
       },
     },
     {
@@ -244,8 +260,6 @@ rooms.push({
         ],
       },
     },
-    // TODO: Exit to common area.
-    // TODO: Looking at things around.
   ],
 })
 
@@ -347,6 +361,65 @@ rooms.push({
           return result
         },
       },
+    },
+  ],
+})
+
+// TODO: Needs a recheck for completeness.
+rooms.push({
+  roomNo: 2_004,
+  name: langmap({
+    enus: `Road`,
+  }),
+  description: langmap({
+    enus: `You are on a road leading through the countryside with a wide view of the surrounding land.
+      To the north lies a forest beyond a thick meadow of flowers and tall grass. Animal runs flow and
+      twist around in it. To the west there is a series of row houses. To the south east is a town
+      with a smattering of mostly small buildings. Directly south, past the buildings, and surrounded
+      by constructed stone archways, lies The Populace, an open area with various lines made of stone crossing the
+      ground in ceremonial patterns.`,
+  }),
+  things: [
+    {
+      name: langmap({
+        enus: `Houses`,
+      }),
+      description: langmap({
+        enus: `The road tapers as it approaches a series of houses.`,
+      }),
+      exit: {
+        useNarration: langmap({
+          enus: `You go along the road toward the houses.`,
+        }),
+        toRoomNo: 2_001,
+      },
+    },
+    {
+      name: langmap({
+        enus: `Forest`,
+      }),
+      description: langmap({
+        enus: `A forest stands in the distance across a meadow. Leaves top the trees and prevent you from
+          observing any details within.`,
+      }),
+    },
+    {
+      name: langmap({
+        enus: `Town`,
+      }),
+      description: langmap({
+        enus: `Many small buildings line walkways and open areas in the town center. A few larger
+          structures are interspersed among them.`,
+      }),
+    },
+    {
+      name: langmap({
+        enus: `The Populace`,
+      }),
+      description: langmap({
+        enus: `Stone lines in the shape of the wind, waterfall, root, and fire crests are distinctly
+          visible, surrounded by three stone archways.`,
+      }),
     },
   ],
 })
