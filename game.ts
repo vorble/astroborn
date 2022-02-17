@@ -1,3 +1,4 @@
+import { Battle } from './battle.js'
 import { ButtonBar, ButtonGrid, ButtonGridLayoutAction } from './buttons.js'
 import * as lang from './lang.js'
 import { LangMap } from './lang.js'
