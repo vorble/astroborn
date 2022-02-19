@@ -346,10 +346,7 @@ class UIActionGrid {
   }
 
   setActions(items: Array<UIActionGridItem>) {
-    if (items.length == 0) {
-      this.reset()
-      return
-    } else if (items.length > this.buttons.length) {
+    if (items.length > this.buttons.length) {
       throw new Error(`Action items cannot exceed ${ this.buttons.length } items.`)
     }
     this.mode = 'actions'
