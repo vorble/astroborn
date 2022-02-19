@@ -23,6 +23,16 @@ function getElementByIdOrThrow(id: string): HTMLElement {
   return element
 }
 
+function getButtons(element: HTMLElement): Array<UIButton> {
+  const buttons = []
+  for (const button of element.childNodes) {
+    if (button instanceof HTMLButtonElement) {
+      buttons.push(new UIButton(button))
+    }
+  }
+  return buttons
+}
+
 class UINarration {
   element: HTMLElement
   trimHistoryGate: number
@@ -145,19 +155,13 @@ class UITargetBar {
   page: number
 
   constructor(which: 'targets') {
-    const element = getElementByIdOrThrow(which)
-    this.buttons = []
-    this.items = []
-    this.page = 0
-    for (const button of element.childNodes) {
-      if (button instanceof HTMLButtonElement) {
-        this.buttons.push(new UIButton(button))
-      }
-    }
+    this.buttons = getButtons(getElementByIdOrThrow(which))
     if (this.buttons.length < 3) {
       throw new Error(`At least 3 buttons are required in the targets bar.`)
     }
-    // No reset, the buttons reset themselves when they are created.
+    this.items = []
+    this.page = 0
+    // No reset, the buttons reset themselves when they are created in getButtons().
   }
 
   reset() {
@@ -235,12 +239,142 @@ class UITargetBar {
   }
 }
 
+interface UIActionGridItem {
+  text: string,
+  action: () => void,
+}
+
+interface UIActionGridState {
+  items: Array<UIActionGridItem>
+  mode: 'actions' | 'list'
+  page: number
+  closeState: null | UIActionGridState
+}
+
+class UIActionGrid {
+  buttons: Array<UIButton>
+  items: Array<UIActionGridItem>
+  mode: 'actions' | 'list'
+  page: number
+  closeState: null | UIActionGridState
+
+  constructor(which: 'actions') {
+    this.buttons = getButtons(getElementByIdOrThrow(which))
+    if (this.buttons.length != 9) {
+      throw new Error(`Actions grid requires 9 items. Found ${ this.buttons.length }.`)
+    }
+    this.items = []
+    this.mode = 'actions'
+    this.page = 0
+    this.closeState = null
+    // No reset, the buttons reset themselves when they are created in getButtons().
+  }
+
+  reset() {
+    this.items = []
+    this.mode = 'actions'
+    this.page = 0
+    this.closeState = null
+    for (const button of this.buttons) {
+      button.reset()
+    }
+  }
+
+  save(): UIActionGridState {
+    return {
+      items: this.items,
+      mode: this.mode,
+      page: this.page,
+      closeState: this.closeState,
+    }
+  }
+
+  restore(state: UIActionGridState) {
+    Object.assign(this, state)
+    this._updateButtons()
+  }
+
+  _getItem(buttonIndex: number): UIActionGridItem | null | 'left' | 'close' | 'right' {
+    if (this.mode == 'actions') {
+      return buttonIndex < this.items.length ? this.items[buttonIndex] : null
+    } else if (this.mode == 'list') {
+      // 0 1 2
+      // 3 4 5
+      // 6 7 8 <-- 6 left, 7 close, 8 right
+      if (buttonIndex == 6) {
+        return this.page > 0 ? 'left' : null
+      } else if (buttonIndex == 7) {
+        return 'close'
+      } else if (buttonIndex == 8) {
+        return (this.page + 1) * 6 < this.items.length ? 'right' : null
+      }
+      const actionIndex = this.page * 6 + buttonIndex
+      return actionIndex < this.items.length ? this.items[actionIndex] : null
+    } else {
+      throw new Error(`Unhandled mode="${ this.mode }".`)
+    }
+  }
+
+  _updateButtons() {
+    for (let i = 0; i < this.buttons.length; ++i) {
+      const button = this.buttons[i]
+      const item = this._getItem(i)
+      if (item == null) {
+        button.reset()
+      } else if (item == 'left') {
+        button.set('<', () => {
+          this.page -= 1
+          this._updateButtons()
+        })
+      } else if (item == 'close') {
+        if (this.closeState == null) {
+          throw new Error(`Assertion error, no close state found.`)
+        }
+        const closeState = this.closeState
+        button.set('X', () => {
+          this.restore(closeState)
+        })
+      } else if (item == 'right') {
+        button.set('>', () => {
+          this.page += 1
+          this._updateButtons()
+        })
+      } else {
+        button.set(item.text, item.action)
+      }
+    }
+  }
+
+  setActions(items: Array<UIActionGridItem>) {
+    if (items.length == 0) {
+      this.reset()
+      return
+    } else if (items.length > this.buttons.length) {
+      throw new Error(`Action items cannot exceed ${ this.buttons.length } items.`)
+    }
+    this.mode = 'actions'
+    this.items = [...items]
+    this.page = 0
+    this.closeState = null
+    this._updateButtons()
+  }
+
+  setList(items: Array<UIActionGridItem>, closeState: UIActionGridState) {
+    this.mode = 'list'
+    this.items = [...items]
+    this.page = 0
+    this.closeState = closeState
+    this._updateButtons()
+  }
+}
+
 export class UI {
   narration: UINarration
   hp: UIResourceBar
   mp: UIResourceBar
   pp: UIResourceBar
   targets: UITargetBar
+  actions: UIActionGrid
 
   constructor() {
     this.narration = new UINarration('narration')
@@ -248,6 +382,7 @@ export class UI {
     this.mp = new UIResourceBar('mp')
     this.pp = new UIResourceBar('pp')
     this.targets = new UITargetBar('targets')
+    this.actions = new UIActionGrid('actions')
   }
 
   reset() {
@@ -256,5 +391,6 @@ export class UI {
     this.mp.reset()
     this.pp.reset()
     this.targets.reset()
+    this.actions.reset()
   }
 }

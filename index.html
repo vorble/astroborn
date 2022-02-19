@@ -92,49 +92,49 @@
     import { UI } from './ui.js'
     window.ui = new UI()
 
-    function showMenu() {
+    function showTargetsBar() {
       const root = ui.targets.save()
   ui.targets.setTargets([
     {
       text: 'Target 1',
       action: () => {
         const state = ui.targets.save()
-        showSubMenu(root, state)
+        showTargetsBarSub(root, state)
       },
     },
     {
       text: 'Target 2',
       action: () => {
         const state = ui.targets.save()
-        showSubMenu(root, state)
+        showTargetsBarSub(root, state)
       },
     },
     {
       text: 'Target 3',
       action: () => {
         const state = ui.targets.save()
-        showSubMenu(root, state)
+        showTargetsBarSub(root, state)
       },
     },
     {
       text: 'Target 4',
       action: () => {
         const state = ui.targets.save()
-        showSubMenu(root, state)
+        showTargetsBarSub(root, state)
       },
     },
     {
       text: 'Target 5',
       action: () => {
         const state = ui.targets.save()
-        showSubMenu(root, state)
+        showTargetsBarSub(root, state)
       },
     },
   ])
 }
-window.showMenu = showMenu
+window.showTargetsBar = showTargetsBar
 
-function showSubMenu(root, parent) {
+function showTargetsBarSub(root, parent) {
   ui.targets.setTargets([
     {
       text: 'Do It',
@@ -149,6 +149,32 @@ function showSubMenu(root, parent) {
       },
     },
   ])
+}
+
+window.showActions = function showActions() {
+  const items = []
+  for (let i = 0; i < 9; ++i) {
+    const j = i
+    items.push({ text: 'Act ' + j, action: () => {
+      console.log('Did Act ' + j)
+      const state = ui.actions.save()
+      showList('A', j, state)
+    }});
+  }
+  ui.actions.setActions(items)
+}
+
+function showList(prefix, count, state) {
+  const items = []
+  for (let i = 0; i < count; ++i) {
+    const j = i
+    items.push({ text: prefix + 'A' + j, action: () => {
+      console.log('DID  ' + prefix + 'A' + j)
+      const state = ui.actions.save()
+      showList(prefix + 'A', j, state)
+    }});
+  }
+  ui.actions.setList(items, state)
 }
 
   </script>
