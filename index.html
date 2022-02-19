@@ -12,51 +12,46 @@
       background-color:#fff0eb;
       color:#0e3116;
     }
-
     body {
       touch-action: manipulation;
     }
-
     button {
-      border-width: 1pt;
-      padding: 1pt;
+      border-width: 1px;
+      padding: 1px;
     }
-
-    .spacer {
+    p.spacer {
       height: 100vh;
     }
-
-    .game_client {
+    #ui {
       height: 100vh;
     }
-
-    .story_container {
-      height: 75vh;
+    #narration {
+      height: 73vh;
       overflow-y: scroll;
-      margin-left: 5px;
-      margin-right: 5px;
+      margin-left: 1ch;
+      margin-right: 1ch;
     }
-
-    .story {
-      height: 75vh;
-    }
-
-    .story_element {
-      margin-top: 1em;
-    }
-
-    .buttons_container {
-      height: 25vh;
+    #hud {
+      height: 27vh;
       overflow-y: scroll;
     }
-
-    .buttons_bar {
+    #resources {
+      height: 2vh;
+      display: grid;
+      grid-template-columns: 33% 34% 33%;
+    }
+    #hp_slot { background: #020; display: grid; padding: 1px; }
+    #hp      { background: #191; }
+    #mp_slot { background: #200; display: grid; padding-top: 1px; padding-bottom: 1px; }
+    #mp      { background: #A22; }
+    #pp_slot { background: #002; display: grid; padding: 1px; }
+    #pp      { background: #33F; }
+    #targets {
       height: 6vh;
       display: grid;
       grid-template-columns: 25% 25% 25% 25%;
     }
-
-    .buttons_grid {
+    #actions {
       height: 19vh;
       display: grid;
       grid-template-columns: 33% 34% 33%;
@@ -64,20 +59,23 @@
   </style>
 </head>
 <body>
-  <div class="game_client">
-    <div class="story_container">
-      <div class="story">
-        <div class="spacer"></div>
-      </div>
+  <div id="ui">
+    <div id="narration">
+      <p class="spacer"></p>
     </div>
-    <div class="buttons_container">
-      <div class="buttons_bar">
+    <div id="hud">
+      <div id="resources">
+        <div id="hp_slot"><div id="hp" style="width: 100%"></div></div>
+        <div id="mp_slot"><div id="mp" style="width: 100%"></div></div>
+        <div id="pp_slot"><div id="pp" style="width: 100%"></div></div>
+      </div>
+      <div id="targets">
         <button></button>
         <button></button>
         <button></button>
         <button></button>
       </div>
-      <div class="buttons_grid">
+      <div id="actions">
         <button></button>
         <button></button>
         <button></button>
@@ -91,8 +89,68 @@
     </div>
   </div>
   <script type="module">
-    import { Game } from './game.js'
-    window.game = new Game()
+    import { UI } from './ui.js'
+    window.ui = new UI()
+
+    function showMenu() {
+      const root = ui.targets.save()
+  ui.targets.setTargets([
+    {
+      text: 'Target 1',
+      action: () => {
+        const state = ui.targets.save()
+        showSubMenu(root, state)
+      },
+    },
+    {
+      text: 'Target 2',
+      action: () => {
+        const state = ui.targets.save()
+        showSubMenu(root, state)
+      },
+    },
+    {
+      text: 'Target 3',
+      action: () => {
+        const state = ui.targets.save()
+        showSubMenu(root, state)
+      },
+    },
+    {
+      text: 'Target 4',
+      action: () => {
+        const state = ui.targets.save()
+        showSubMenu(root, state)
+      },
+    },
+    {
+      text: 'Target 5',
+      action: () => {
+        const state = ui.targets.save()
+        showSubMenu(root, state)
+      },
+    },
+  ])
+}
+window.showMenu = showMenu
+
+function showSubMenu(root, parent) {
+  ui.targets.setTargets([
+    {
+      text: 'Do It',
+      action: () => {
+        ui.targets.restore(root)
+      },
+    },
+    {
+      text: 'Don\'t Do It',
+      action: () => {
+        ui.targets.restore(parent)
+      },
+    },
+  ])
+}
+
   </script>
 </body>
 </html>
