@@ -172,6 +172,7 @@ class UITargetBar {
     }
   }
 
+  // TODO: The user will probably be happier if there was a variant of this method which doesn't reset the paging.
   setTargets(items: Array<UITargetBarItem>) {
     this.page = 0
     this.items = [...items]

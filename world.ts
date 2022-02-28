@@ -1,7 +1,12 @@
+import { GameProgress } from './game.js'
 import { Room } from './room.js'
 import { Scene } from './scene.js'
 
 import * as lenuve from './world/lenuve.js'
+
+export function getZoneNoFromRoomNo(roomNo: number): number {
+  return Math.floor(roomNo / 1000)
+}
 
 export class World {
   rooms: Map<number, Room>
@@ -22,10 +27,10 @@ export class World {
   }
 
   getStartingRoomNo(): number {
-    return 1000
+    return 1000;
   }
 
-  getRoom(roomNo: number): Room {
+  getRoom(progress: GameProgress, roomNo: number): Room {
     const result = this.rooms.get(roomNo)
     if (result == null) {
       throw new Error(`Room ${ roomNo } not found.`)

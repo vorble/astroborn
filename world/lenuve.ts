@@ -8,5 +8,5 @@ export function init(world: World) {
         A thatch door is on the narrow wall. On the other narrow wall, a thin window lets in a ray of
         sunlight, illuminating the dust in the dank smelling air.`
     }
-    world.rooms.set(room.roomNo, room)
+    world.rooms.set(room.roomNo, room) // TODO: Bad
 }
