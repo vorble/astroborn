@@ -67,7 +67,7 @@ class UINarration {
 
   append(text: string) {
     const p = document.createElement('p')
-    p.innerText = text
+    p.innerText = text.replace(/\r?\n/g, ' ')
     this.element.appendChild(p)
     p.scrollIntoView({
       behavior: 'smooth',
