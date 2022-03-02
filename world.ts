@@ -1,5 +1,5 @@
 import { GameProgress } from './game.js'
-import { Room } from './room.js'
+import { Room, RoomGenerator } from './room.js'
 import { Scene } from './scene.js'
 
 import * as lenuve from './world/lenuve.js'
@@ -9,11 +9,15 @@ export function getZoneNoFromRoomNo(roomNo: number): number {
 }
 
 export class World {
-  rooms: Map<number, Room>
+  zones: Map<number, RoomGenerator>
 
   constructor() {
-    this.rooms = new Map()
+    this.zones = new Map()
     lenuve.init(this)
+  }
+
+  registerZone(zoneNo: number, roomGenerator: RoomGenerator) {
+    this.zones.set(zoneNo, roomGenerator);
   }
 
   getOpeningScene() {
@@ -27,14 +31,15 @@ export class World {
   }
 
   getStartingRoomNo(): number {
-    return 1000;
+    return 1000
   }
 
   getRoom(progress: GameProgress, roomNo: number): Room {
-    const result = this.rooms.get(roomNo)
-    if (result == null) {
-      throw new Error(`Room ${ roomNo } not found.`)
+    const zoneNo = getZoneNoFromRoomNo(roomNo)
+    const roomGenerator = this.zones.get(zoneNo)
+    if (roomGenerator == null) {
+      throw new Error(`Room generator for zone ${ zoneNo } for room ${ roomNo } not found.`)
     }
-    return result
+    return roomGenerator(progress, roomNo)
   }
 }

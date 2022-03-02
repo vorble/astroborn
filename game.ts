@@ -1,3 +1,5 @@
+import { Battle } from './battle.js'
+import { Room } from './room.js'
 import { Scene } from './scene.js'
 import { UI } from './ui.js'
 import { World, getZoneNoFromRoomNo } from './world.js'
@@ -76,8 +78,7 @@ class GameProgressTotal {
   }
 
   setQuestValue(name: string, value: number) {
-    const result = this.questValues.get(name)
-    return result == null ? 0 : result
+    this.questValues.set(name, value)
   }
 
   setZoneValue(zoneNo: number, name: string, value: number) {
@@ -125,10 +126,11 @@ class GameProgressTotal {
 export class Game {
   ui: UI
   timer: GameTimer
-  state: 'init' | 'main_menu' | 'world' | 'battle' | 'scene'
+  state: 'init' | 'main_menu' | 'world' | 'world_menu' | 'battle' | 'scene'
   world: World
   roomNo: number
   progress: GameProgressTotal
+  battle: null | Battle
 
   constructor() {
     this.ui = new UI()
@@ -137,6 +139,7 @@ export class Game {
     this.world = new World()
     this.roomNo = this.world.getStartingRoomNo()
     this.progress = new GameProgressTotal()
+    this.battle = null
   }
 
   start() {
@@ -172,7 +175,7 @@ export class Game {
     }
   }
 
-  enterState(state: 'init' | 'main_menu' | 'world' | 'battle' | 'scene') {
+  enterState(state: 'init' | 'main_menu' | 'world' | 'world_menu' | 'battle' | 'scene') {
     // Stop and restart the timer as necessary. Doing a stop and then a start will
     // reset the timer so you don't end up entering a battle and unfairly miss a
     // round if the timer is really close to firing already.
@@ -184,17 +187,12 @@ export class Game {
     this.state = state
   }
 
-  doNewGame() {
-    this.ui.actions.reset()
-    this.ui.targets.reset()
-    this.ui.narration.reset()
-    this.enterState('world')
-    this.updateWorldButtons()
-    this.runScene(this.world.getOpeningScene())
+  getCurrentRoom(): Room {
+    return this.world.getRoom(this.progress.getForRoom(this.roomNo), this.roomNo)
   }
 
   updateWorldButtons() {
-    const room = this.world.getRoom(this.progress.getForRoom(this.roomNo), this.roomNo)
+    const room = this.getCurrentRoom()
     this.ui.targets.setTargets([
       { text: 'Here', action: () => {} },
       { text: 'There', action: () => {} },
@@ -204,17 +202,11 @@ export class Game {
         text: 'Look',
         action: () => this.doWorldLook(),
       },
+      {
+        text: 'Look At...',
+        action: () => this.doWorldOpenLookAtMenu(),
+      },
     ])
-  }
-
-  /*
-  doLoadGame() {
-  }
-  */
-
-  doWorldLook() {
-    const room = this.world.getRoom(this.progress.getForRoom(this.roomNo), this.roomNo)
-    this.ui.narration.append(room.description)
   }
 
   runScene(scene: Scene) {
@@ -249,7 +241,56 @@ export class Game {
     }
   }
 
+  doNewGame() {
+    this.ui.actions.reset()
+    this.ui.targets.reset()
+    this.ui.narration.reset()
+    this.enterState('world')
+    this.updateWorldButtons()
+    this.runScene(this.world.getOpeningScene())
+  }
+
+  /*
+  doLoadGame() {
+  }
+  */
+
+  doWorldLook() {
+    const room = this.getCurrentRoom()
+    this.ui.narration.append(room.description)
+  }
+
+  doWorldOpenLookAtMenu() {
+    const room = this.getCurrentRoom()
+    const prevState = this.state
+    this.enterState('world_menu')
+    const targets = this.ui.targets.save()
+    const actions = this.ui.actions.save()
+    const close = () => {
+      this.ui.targets.restore(targets)
+      this.ui.actions.restore(actions)
+      this.enterState(prevState)
+    }
+    const items = room.things.map((thing) => {
+      return {
+        text: thing.name,
+        action: () => {
+          this.ui.narration.append(thing.lookAt)
+          close()
+        },
+      }
+    })
+    this.ui.targets.reset()
+    this.ui.actions.setList(items, close)
+  }
+
   doStateWorld() {
+    const room = this.getCurrentRoom()
+    if (room.tick != null) {
+      if (room.tick()) {
+        this.updateWorldButtons()
+      }
+    }
   }
 
   doStateBattle() {

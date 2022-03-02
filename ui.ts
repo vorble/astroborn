@@ -249,7 +249,8 @@ interface UIActionGridState {
   items: Array<UIActionGridItem>
   mode: 'actions' | 'list'
   page: number
-  closeState: null | UIActionGridState
+  // TODO rename closeState to reflect that it can also be an action function.
+  closeState: null | UIActionGridState | (() => void)
 }
 
 class UIActionGrid {
@@ -257,7 +258,8 @@ class UIActionGrid {
   items: Array<UIActionGridItem>
   mode: 'actions' | 'list'
   page: number
-  closeState: null | UIActionGridState
+  // TODO rename closeState to reflect that it can also be an action function.
+  closeState: null | UIActionGridState | (() => void)
 
   constructor(which: 'actions') {
     this.buttons = getButtons(getElementByIdOrThrow(which))
@@ -333,7 +335,11 @@ class UIActionGrid {
         }
         const closeState = this.closeState
         button.set('X', () => {
-          this.restore(closeState)
+          if (typeof closeState === 'function') {
+            closeState()
+          } else {
+            this.restore(closeState)
+          }
         })
       } else if (item == 'right') {
         button.set('>', () => {
@@ -357,7 +363,7 @@ class UIActionGrid {
     this._updateButtons()
   }
 
-  setList(items: Array<UIActionGridItem>, closeState: UIActionGridState) {
+  setList(items: Array<UIActionGridItem>, closeState: UIActionGridState | (() => void)) {
     this.mode = 'list'
     this.items = [...items]
     this.page = 0
