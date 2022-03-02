@@ -4,11 +4,20 @@ import { World } from '../world.js'
 
 function roomInRowHouse(progress: GameProgress): Room {
   const room = {
-    description: `You are in dimly lit, permanent room built from rough-hewn, dark planks that let in only
-      tendrils of light and moist air from the outdoors. A bed, some racks, and drawers line the walls.
-      A thatch door is on the narrow wall. On the other narrow wall, a thin window lets in a ray of
-      sunlight, illuminating the dust in the dank smelling air.`,
+    description: `You are in dimly lit, permanent room built from rough-hewn, dark planks that let
+      in only tendrils of light and moist air from the outdoors. A bed, some racks, and drawers
+      line the walls. A thatch door is on the narrow wall. On the other narrow wall, a thin window
+      lets in a ray of sunlight, illuminating the dust in the dank smelling air.`,
     things: [
+      {
+        name: `Thatch Door`,
+        lookAt: `It's woven from mature thera grass blades with hinges on one side that allow
+          door to open into the room.`,
+        exit: {
+          goNarration: `You go through the door and down the hallway to enter the outdoors.`,
+          roomNo: 1001,
+        },
+      },
       {
         name: `Bed`,
         lookAt: progress.get('$bed_made')
@@ -22,10 +31,32 @@ function roomInRowHouse(progress: GameProgress): Room {
   return room
 }
 
+function roomRowHouseLawn(progress: GameProgress): Room {
+  const room = {
+    description: `You are on a worn, sandy walkway stretching through the grassy plot, connecting
+    a larger footpath and a series of faded wooden houses constructed in a row. The grass is short
+    and worn from use. A meadow surrounds the lawn and reaches around to the rear of the houses.
+    A small, but traveled opening is on the tree line in the distance, past the meadow.`,
+    things: [
+      {
+        name: `House Door`,
+        lookAt: `It's a sturdy wooden door with hinges.`,
+        exit: {
+          goNarration: `You go through the door and go down the hallway to one of the rooms.`,
+          roomNo: 1000,
+        },
+      },
+    ],
+  }
+
+  return room
+}
+
 export function init(world: World) {
   world.registerZone(1, (progress, roomNo) => {
     switch (roomNo) {
       case 1000: return roomInRowHouse(progress) 
+      case 1001: return roomRowHouseLawn(progress) 
     }
     throw new Error(`Room ${ roomNo } not found.`)
   });

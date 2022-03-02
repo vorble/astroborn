@@ -7,9 +7,15 @@ export interface Room {
   tick?: () => boolean,
 }
 
-interface RoomThing {
+export interface RoomThing {
   name: string,
   lookAt: string,
+  exit?: RoomExit,
+}
+
+export interface RoomExit {
+  goNarration: string,
+  roomNo?: number
 }
 
 export type RoomGenerator = (progress: GameProgress, roomNo: number) => Room

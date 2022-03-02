@@ -1,5 +1,5 @@
 import { Battle } from './battle.js'
-import { Room } from './room.js'
+import { Room, RoomExit } from './room.js'
 import { Scene } from './scene.js'
 import { UI } from './ui.js'
 import { World, getZoneNoFromRoomNo } from './world.js'
@@ -193,10 +193,20 @@ export class Game {
 
   updateWorldButtons() {
     const room = this.getCurrentRoom()
-    this.ui.targets.setTargets([
-      { text: 'Here', action: () => {} },
-      { text: 'There', action: () => {} },
-    ])
+    const exits = room.things.filter((thing) => thing.exit != null)
+      .map((thing) => {
+        if (thing.exit == null) {
+          throw new Error(`Assertion error, thing.exit is null: thing=${ thing }.`) 
+        }
+        const exit = thing.exit
+        return {
+          text: thing.name,
+          action: () => {
+            this.doWorldTakeExit(exit)
+          },
+        }
+      })
+    this.ui.targets.setTargets(exits)
     this.ui.actions.setActions([
       {
         text: 'Look',
@@ -258,6 +268,14 @@ export class Game {
   doWorldLook() {
     const room = this.getCurrentRoom()
     this.ui.narration.append(room.description)
+  }
+
+  doWorldTakeExit(exit: RoomExit) {
+    this.ui.narration.append(exit.goNarration)
+    if (exit.roomNo != null) {
+      this.roomNo = exit.roomNo
+      this.updateWorldButtons()
+    }
   }
 
   doWorldOpenLookAtMenu() {
