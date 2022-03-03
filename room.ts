@@ -1,10 +1,9 @@
-import { GameProgress } from './game.js'
+import { GameProgress, GameAction } from './game.js'
 
 export interface Room {
   description: string,
   things: Array<RoomThing>,
-  // Return true if the room's state is updated.
-  tick?: () => boolean,
+  tick?: () => void | undefined | null | GameAction,
 }
 
 export interface RoomThing {

@@ -1,4 +1,5 @@
 import { GameProgress } from '../game.js'
+import { rollRange } from '../roll.js'
 import { Room } from '../room.js'
 import { World } from '../world.js'
 
@@ -47,6 +48,20 @@ function roomRowHouseLawn(progress: GameProgress): Room {
         },
       },
     ],
+    // This bit of ambiance isn't very important to the room and probably belongs more in the meadow.
+    tick: () => {
+      let count = progress.get('ambiance') // ephemeral variable
+      let max = progress.get('ambiance_max')
+      if (max == 0) {
+        progress.set('ambiance_max', max = rollRange(75, 250))
+      }
+      progress.set('ambiance', count = count + 1)
+      if (count >= max) {
+        progress.set('ambiance', 0)
+        progress.set('ambiance_max', rollRange(75, 250))
+        return { narration: `The wind blows gently around you.` }
+      }
+    },
   }
 
   return room

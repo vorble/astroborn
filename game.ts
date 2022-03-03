@@ -31,15 +31,30 @@ export interface GameProgress {
   set: (name: string, value: number) => void,
 }
 
+// Quest variables are prefixed with @ and are accessible through the entire game and should
+// be used to guide the overarching story.
+// Zone variables are prefixed with % and are accessible from any room in that zone. These
+// should be used to give life to the zone or to control aspects only relevant to the zone.
+// Room variables are prefixed with $ and are accessible only from one room. These should be
+// used for persistent room states that should persist when the player returns.
+// Ephemeral variables have no prefix and are accessible only from one room for the time that
+// the player is in the room. These are cleared as the player travels between rooms. These
+// should be used for non-persistent state in the room (ambiance).
 class GameProgressTotal {
   questValues: Map<string, number>
   zoneValues: Map<number, Map<string, number>>
   roomValues: Map<number, Map<string, number>>
+  ephemeralValues: Map<string, number>
 
   constructor() {
     this.questValues = new Map()
     this.zoneValues = new Map()
     this.roomValues = new Map()
+    this.ephemeralValues = new Map()
+  }
+
+  clearEphemeral() {
+    this.ephemeralValues.clear()
   }
 
   static isQuestVariable(name: string): boolean {
@@ -52,6 +67,10 @@ class GameProgressTotal {
 
   static isRoomVariable(name: string): boolean {
     return name.startsWith('$')
+  }
+
+  static isEphemeralVariable(name: string): boolean {
+    return /^[a-zA-Z0-9_]/.test(name)
   }
 
   getQuestValue(name: string): number {
@@ -77,6 +96,11 @@ class GameProgressTotal {
     return result == null ? 0 : result
   }
 
+  getEphemeral(name: string): number {
+    const result = this.ephemeralValues.get(name)
+    return result == null ? 0 : result
+  }
+
   setQuestValue(name: string, value: number) {
     this.questValues.set(name, value)
   }
@@ -97,6 +121,10 @@ class GameProgressTotal {
     roomValues.set(name, value)
   }
 
+  setEphemeral(name: string, value: number) {
+    this.ephemeralValues.set(name, value)
+  }
+
   getForRoom(roomNo: number): GameProgress {
     return {
       get: (name) => {
@@ -106,6 +134,8 @@ class GameProgressTotal {
           return this.getZoneValue(getZoneNoFromRoomNo(roomNo), name)
         } else if (GameProgressTotal.isRoomVariable(name)) {
           return this.getRoomValue(roomNo, name)
+        } else if (GameProgressTotal.isEphemeralVariable(name)) {
+          return this.getEphemeral(name)
         }
         throw new Error(`Invalid variable name "${ name }".`)
       },
@@ -116,11 +146,20 @@ class GameProgressTotal {
           return this.setZoneValue(getZoneNoFromRoomNo(roomNo), name, value)
         } else if (GameProgressTotal.isRoomVariable(name)) {
           return this.setRoomValue(roomNo, name, value)
+        } else if (GameProgressTotal.isEphemeralVariable(name)) {
+          return this.setEphemeral(name, value)
         }
         throw new Error(`Invalid variable name "${ name }".`)
       }
     }
   }
+}
+
+export interface GameAction {
+  // Should a narration be displayed?
+  narration?: string,
+  // Should the targets bar and action grid be updated?
+  updated?: boolean,
 }
 
 export class Game {
@@ -274,6 +313,7 @@ export class Game {
     this.ui.narration.append(exit.goNarration)
     if (exit.roomNo != null) {
       this.roomNo = exit.roomNo
+      this.progress.clearEphemeral()
       this.updateWorldButtons()
     }
   }
@@ -302,11 +342,21 @@ export class Game {
     this.ui.actions.setList(items, close)
   }
 
+  doGameAction(action: GameAction) {
+    if (action.updated != null && action.updated) {
+      this.updateWorldButtons()
+    }
+    if (action.narration != null) {
+      this.ui.narration.append(action.narration)
+    }
+  }
+
   doStateWorld() {
     const room = this.getCurrentRoom()
     if (room.tick != null) {
-      if (room.tick()) {
-        this.updateWorldButtons()
+      const action = room.tick()
+      if (action != null) {
+        this.doGameAction(action)
       }
     }
   }
