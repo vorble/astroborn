@@ -144,7 +144,7 @@ interface UITargetBarItem {
   action: () => void,
 }
 
-interface UITargetBarState {
+export interface UITargetBarState {
   items: Array<UITargetBarItem>
   page: number
 }
@@ -245,7 +245,7 @@ interface UIActionGridItem {
   action: () => void,
 }
 
-interface UIActionGridState {
+export interface UIActionGridState {
   items: Array<UIActionGridItem>
   mode: 'actions' | 'list'
   page: number

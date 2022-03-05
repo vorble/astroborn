@@ -1,7 +1,33 @@
+import { BattleTemplate, BattleMobTemplate } from '../battle.js'
 import { GameProgress } from '../game.js'
 import { rollRange } from '../roll.js'
 import { Room } from '../room.js'
 import { World } from '../world.js'
+
+function mobBoreMite(): BattleMobTemplate {
+  return {
+    name: `Bore Mite`,
+    stats: {
+      hp: 0,
+      mp: 0,
+      pp: 0,
+      attack: 0,
+      defense: 0,
+      resist: 0,
+      mystic: 0,
+      psyche: 0,
+    },
+  }
+}
+
+function makeSampleBattle(): BattleTemplate {
+  return {
+    mobs: [
+      mobBoreMite(),
+      mobBoreMite(),
+    ],
+  }
+}
 
 function roomOops(): Room {
   const room = {
@@ -43,6 +69,16 @@ function roomInRowHouse(progress: GameProgress): Room {
           ? `It's purposefully tidy.`
           : `It's not quite neat with the linens pushed to one side as if the last occupant
             did not get much rest.`,
+      },
+      {
+        name: `Hole`,
+        lookAt: `It's a hole in the wood. You might be able to get a closer look.`,
+        use: () => {
+          return {
+            narration: `You look into the hole. Something is inside!`,
+            battle: makeSampleBattle(),
+          }
+        },
       },
     ],
   }

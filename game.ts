@@ -1,4 +1,4 @@
-import { Battle } from './battle.js'
+import { Battle, BattleTemplate } from './battle.js'
 import { Room, RoomExit } from './room.js'
 import { Scene } from './scene.js'
 import { UI } from './ui.js'
@@ -160,6 +160,7 @@ export interface GameAction {
   narration?: string,
   // Should the targets bar and action grid be updated?
   updated?: boolean,
+  battle?: BattleTemplate,
 }
 
 export class Game {
@@ -226,6 +227,22 @@ export class Game {
     this.state = state
   }
 
+  enterBattle(battle: BattleTemplate) {
+    this.battle = new Battle(this, battle)
+    this.enterState('battle')
+    this.updateBattleButtons()
+    // this.battle will take it from here
+  }
+
+  endBattle() {
+    if (this.battle != null) {
+      this.ui.targets.restore(this.battle.postState.targets)
+      this.ui.actions.restore(this.battle.postState.actions)
+      this.enterState(this.battle.postState.state)
+      this.battle = null
+    }
+  }
+
   getCurrentRoom(): Room {
     return this.world.getRoom(this.progress.getForRoom(this.roomNo), this.roomNo)
   }
@@ -255,7 +272,18 @@ export class Game {
         text: 'Look At...',
         action: () => this.doWorldOpenLookAtMenu(),
       },
+      {
+        text: 'Use...',
+        action: () => this.doWorldOpenUseMenu(),
+      },
     ])
+  }
+
+  updateBattleButtons() {
+    if (this.battle == null) {
+      throw new Error(`Assertion error, battle is null!`)
+    }
+    this.battle.updateBattleButtons()
   }
 
   runScene(scene: Scene) {
@@ -333,8 +361,36 @@ export class Game {
       return {
         text: thing.name,
         action: () => {
-          this.ui.narration.append(thing.lookAt)
           close()
+          this.ui.narration.append(thing.lookAt)
+        },
+      }
+    })
+    this.ui.targets.reset()
+    this.ui.actions.setList(items, close)
+  }
+
+  doWorldOpenUseMenu() {
+    const room = this.getCurrentRoom()
+    const prevState = this.state
+    this.enterState('world_menu')
+    const targets = this.ui.targets.save()
+    const actions = this.ui.actions.save()
+    const close = () => {
+      this.ui.targets.restore(targets)
+      this.ui.actions.restore(actions)
+      this.enterState(prevState)
+    }
+    const items = room.things.filter((thing) => thing.use != null).map((thing) => {
+      if (thing.use == null) {
+        throw new Error(`Assertion error, ineffective filter.`)
+      }
+      const use = thing.use
+      return {
+        text: thing.name,
+        action: () => {
+          close()
+          this.doGameAction(use())
         },
       }
     })
@@ -349,6 +405,9 @@ export class Game {
     if (action.narration != null) {
       this.ui.narration.append(action.narration)
     }
+    if (action.battle != null) {
+      this.enterBattle(action.battle)
+    }
   }
 
   doStateWorld() {
@@ -362,5 +421,9 @@ export class Game {
   }
 
   doStateBattle() {
+    if (this.battle == null) {
+      throw new Error(`Assertion error, battle is null!`)
+    }
+    this.battle.tick()
   }
 }

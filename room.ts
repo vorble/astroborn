@@ -10,6 +10,7 @@ export interface RoomThing {
   name: string,
   lookAt: string,
   exit?: RoomExit,
+  use?: () => GameAction,
 }
 
 export interface RoomExit {
