@@ -3,6 +3,24 @@ import { rollRange } from '../roll.js'
 import { Room } from '../room.js'
 import { World } from '../world.js'
 
+function roomOops(): Room {
+  const room = {
+    description: `You are in a vast, dark emptiness. In front of you is a white light.`,
+    things: [
+      {
+        name: `Light`,
+        lookAt: `It's a mesmerizing, pure white light.`,
+        exit: {
+          goNarration: `You go to the light and pass through it with a blinding flash.`,
+          roomNo: 1000,
+        },
+      },
+    ],
+  }
+
+  return room
+}
+
 function roomInRowHouse(progress: GameProgress): Room {
   const room = {
     description: `You are in dimly lit, permanent room built from rough-hewn, dark planks that let
@@ -73,6 +91,6 @@ export function init(world: World) {
       case 1000: return roomInRowHouse(progress) 
       case 1001: return roomRowHouseLawn(progress) 
     }
-    throw new Error(`Room ${ roomNo } not found.`)
+    return roomOops()
   });
 }
