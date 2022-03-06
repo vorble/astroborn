@@ -8,13 +8,13 @@ function mobBoreMite(): BattleMobTemplate {
   return {
     name: `Bore Mite`,
     stats: {
-      hp: 0,
+      hp: 50,
       mp: 0,
       pp: 0,
-      attack: 0,
-      defense: 0,
-      resist: 0,
-      mystic: 0,
+      attack: 10,
+      defense: 6,
+      resist: 6,
+      mystic: 2,
       psyche: 0,
     },
   }
