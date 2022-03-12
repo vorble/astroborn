@@ -13,7 +13,12 @@ export function rollRange(low: number, high: number): number {
   return rollInt(high - low + 1) + low
 }
 
-// Generates a pseudorandom float k with a uniform distribution such that 0.0 <= k < max.
-export function rollRatio(max = 1.0): number {
+// Generates a pseudorandom float k with a uniform distribution such that 0.0 <= k < 1.
+export function rollRatio(): number {
   return Math.random()
+}
+
+// Generates a pseudorandom float k with a uniform distribution such that min <= k < max.
+export function rollUniform(min: number, max: number): number {
+  return min + rollRatio() * (max - min)
 }

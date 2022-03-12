@@ -1,4 +1,5 @@
 import { Battle, BattleTemplate } from './battle.js'
+import { Player, playerMakeDefault } from './player.js'
 import { Room, RoomExit } from './room.js'
 import { Scene } from './scene.js'
 import { UI } from './ui.js'
@@ -171,6 +172,9 @@ export class Game {
   roomNo: number
   progress: GameProgressTotal
   battle: null | Battle
+  player: Player
+
+  DEBUG_BATTLE: boolean
 
   constructor() {
     this.ui = new UI()
@@ -180,6 +184,9 @@ export class Game {
     this.roomNo = this.world.getStartingRoomNo()
     this.progress = new GameProgressTotal()
     this.battle = null
+    this.player = playerMakeDefault()
+
+    this.DEBUG_BATTLE = true // TODO make this false eventually
   }
 
   start() {

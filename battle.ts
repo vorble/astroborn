@@ -1,22 +1,86 @@
 import { Game, GameAction } from './game.js'
-import { rollRatio } from './roll.js'
+import { PlayerLike, Player, PlayerStats } from './player.js'
+import { rollUniform, rollRatio } from './roll.js'
 import { UITargetBarState, UIActionGridState } from './ui.js'
 
-export interface BattleStats {
-  hp: number,
-  mp: number,
-  pp: number,
-  attack: number,
-  defense: number,
-  resist: number,
-  mystic: number,
-  psyche: number,
+function calculateBattleDamagePhysical(a: PlayerStats, d: PlayerStats): number {
+  const oompf = rollUniform(1.0, 1.5)
+  let dmgphy = a.dmgphy
+  if (d.resphy < 0) {
+    dmgphy -= d.resphy // Increases dmgphy by the negative amount of resphy
+  }
+  let dmg = Math.round(a.off * oompf + dmgphy)
+  dmg = Math.max(0, dmg - Math.round(d.def / 3))
+  dmg = Math.max(0, dmg - Math.round(Math.max(0, d.def - a.off) / 2))
+  if (d.resphy > 0) {
+    dmg = Math.max(0, dmg - d.resphy)
+  }
+  return dmg
+}
+
+function calculateBattleDamageElemental(a: PlayerStats, d: PlayerStats): number {
+  const oompf = rollUniform(0.9, 1.1)
+  let dmgele = a.dmgele
+  if (d.resele < 0) {
+    dmgele -= d.resele // Increases dmgele by the negative amount of resele
+  }
+  let dmg = Math.round((1 + a.off / 15.0) * oompf * dmgele)
+  dmg = Math.max(0, dmg - Math.round(d.def / 3))
+  if (d.resele > 0) {
+    dmg = Math.max(0, dmg - d.resele)
+  }
+  return dmg
+}
+
+function calculateBattleDamageMystic(a: PlayerStats, d: PlayerStats): number {
+  const oompf = rollUniform(0.5, 1.5) * (rollRatio() >= .333 ? 2 : 1)
+  let dmgmys = a.dmgmys
+  if (d.resmys < 0) {
+    dmgmys -= d.resmys // Increases dmgmys by the negative amount of resmys
+  }
+  let dmg = Math.round(dmgmys * oompf)
+  dmg = Math.max(0, dmg - Math.round(d.def / 6))
+  if (d.resmys > 0) {
+    dmg = Math.max(0, dmg - d.resmys)
+  }
+  return dmg
+}
+
+function calculateBattleDamagePsychic(a: PlayerStats, d: PlayerStats): number {
+  const oompf = rollUniform(1.0, 1.25)
+  const psybase = a.psy / 15
+  // Disparity in psy produces bonus damage.
+  const psyboost = Math.max(a.psy - d.psy, 0) / 4
+  let dmgpsy = a.dmgpsy  
+  if (d.respsy < 0) {
+    dmgpsy -= d.respsy // Increases dmgpsy by the negative amount of respsy
+  }
+  let dmg = Math.round((1 + psybase + psyboost) * oompf * dmgpsy)
+  dmg = Math.max(0, dmg - Math.round(d.def / 4 + d.psy / 4))
+  if (d.respsy > 0) {
+    dmg = Math.max(0, dmg - d.respsy)
+  }
+  return dmg
+}
+
+export interface BattleDamageBase {
+  phy: number,
+  ele: number,
+  mys: number,
+  psy: number,
+  total: number,
+}
+
+export interface BattleDamage {
+  base: BattleDamageBase,
+  pa: number,
+  effective: number,
 }
 
 export interface BattleMobTemplate {
   name: string,
-  stats: BattleStats,
-  max?: BattleStats,
+  stats: PlayerStats,
+  max?: PlayerStats,
 }
 
 // Powers are 0 for ineffective, 100 for full power, 200 for double power, etc.
@@ -51,14 +115,22 @@ function makeBasicMobAttack(): BattleMobAttack {
 
 interface BattleAttackRound {
   attacker: {
-    stats: BattleStats,
+    stats: PlayerStats,
     position: 'fight' | 'guard' | 'left' | 'right' | 'back' | 'duck',
     attack: BattleMobAttack,
   },
   defender: {
-    stats: BattleStats,
+    stats: PlayerStats,
     position: 'fight' | 'guard' | 'left' | 'right' | 'back' | 'duck',
   },
+}
+
+function calculateBattleDamageBase(a: PlayerStats, d: PlayerStats): BattleDamageBase {
+  const phy = calculateBattleDamagePhysical(a, d)
+  const ele = calculateBattleDamageElemental(a, d)
+  const mys = calculateBattleDamageMystic(a, d)
+  const psy = calculateBattleDamagePsychic(a, d)
+  return { phy, ele, mys, psy, total: phy + ele + mys + psy }
 }
 
 function lookupPA(round: BattleAttackRound): number {
@@ -78,49 +150,17 @@ function lookupPA(round: BattleAttackRound): number {
   throw new Error(`Assertion error, ${ round.defender.position } unhandled.`)
 }
 
-function determineMitigation(round: BattleAttackRound): number {
-  if (round.attacker.attack.damage == 'physical') {
-    return Math.round(round.defender.stats.defense / 10.0)
-  } else if (round.attacker.attack.damage == 'elemental') {
-    return Math.round(round.defender.stats.defense / 2.5 + round.defender.stats.resist / 7.5)
-  } else if (round.attacker.attack.damage == 'mystical') {
-    return Math.round(round.defender.stats.psyche / 1.5 + round.defender.stats.mystic / 8.5)
-  } else if (round.attacker.attack.damage == 'psychic') {
-    return Math.round(round.defender.stats.psyche / 6.5 + round.defender.stats.defense / 3.5)
-  }
-  throw new Error(`Assertion error, ${ round.attacker.attack.damage } unhandled.`)
-}
-
-function calculateBaseDamage(round: BattleAttackRound): number {
-  const variance = (1.0 + rollRatio(.2))
-  if (round.attacker.attack.damage == 'physical') {
-    return Math.round(round.attacker.attack.power * round.attacker.stats.attack / 10.0 * variance)
-  } else if (round.attacker.attack.damage == 'elemental') {
-    return Math.round(round.attacker.attack.power * round.attacker.stats.attack / 10.0 * variance)
-  } else if (round.attacker.attack.damage == 'mystical') {
-    return Math.round(round.attacker.attack.power * round.attacker.stats.mystic / 10.0 * variance)
-  } else if (round.attacker.attack.damage == 'psychic') {
-    return Math.round(round.attacker.attack.power * round.attacker.stats.psyche / 10.0 * variance)
-  }
-  throw new Error(`Assertion error, ${ round.attacker.attack.damage } unhandled.`)
-}
-
-function calculateDamage(round: BattleAttackRound): number {
-  // Algorithm:
-  //  attack damage type and power determine the base damage to do. This is varied some based on luck and 100%-120% of atk power.
-  //  the defender's position mitigates (or makes worse) the damage based on the attack "pa" values.
-  //  depending on the type of damage, the defender's stats can further mitigate the damage done.
-  const baseDamage = calculateBaseDamage(round)
+function calculateBattleDamage(round: BattleAttackRound): BattleDamage {
+  const base = calculateBattleDamageBase(round.attacker.stats, round.defender.stats)
   const pa = lookupPA(round)
-  const preMitigateDamage = (pa / 100.0) * baseDamage
-  const mitigation = determineMitigation(round)
-  return Math.max(0, preMitigateDamage - mitigation)
+  const effective = Math.round((pa / 100.0) * base.total)
+  return { base, pa, effective }
 }
 
 interface BattleMob {
   name: string,
-  stats: BattleStats,
-  max: BattleStats,
+  stats: PlayerStats,
+  max: PlayerStats,
   position: 'fight' | 'guard',
   attackCountdown: number,
   nextAttack: null | BattleMobAttack,
@@ -142,6 +182,7 @@ interface BattlePostState {
 export class Battle {
   game: Game
   postState: BattlePostState
+  player: Player
   mobs: Array<BattleMob>
   position: 'fight' | 'guard' | 'left' | 'right' | 'back' | 'duck'
   target: BattleMob
@@ -154,6 +195,7 @@ export class Battle {
       targets: game.ui.targets.save(),
       actions: game.ui.actions.save(),
     }
+    this.player = game.player
     if (battle.mobs.length == 0) {
       throw new Error(`Cannot create battle with no mobs!`)
     }
@@ -195,7 +237,7 @@ export class Battle {
   }
 
   doMobAttack(mob: BattleMob) {
-    const damage = calculateDamage({
+    const damage = calculateBattleDamage({
       attacker: {
         attack: mob.nextAttack == null ? makeBasicMobAttack() : mob.nextAttack,
         position: mob.position,
@@ -203,10 +245,20 @@ export class Battle {
       },
       defender: {
         position: this.position,
-        stats: mob.stats, // TODO: Use the player stats.
+        stats: this.player,
       },
     })
-    this.game.ui.narration.append(`${ mob.name } attacks and delivers ${ damage } damage!`)
+    this.player.resources.hp = Math.max(0, this.player.resources.hp - damage.effective)
+    this.game.ui.hp.set(this.player.resources.hp, this.player.hp)
+    this.game.ui.mp.set(this.player.resources.mp, this.player.mp)
+    this.game.ui.pp.set(this.player.resources.pp, this.player.pp)
+    if (this.game.DEBUG_BATTLE) {
+      // TODO: Need a good debugging output for damage. This sucks.
+      this.game.ui.narration.append(`${ mob.name } attacks and delivers ${ damage.effective } damage `
+       + `(${ JSON.stringify(damage).replace(/:/g, ': ') })!`)
+    } else {
+      this.game.ui.narration.append(`${ mob.name } attacks and delivers ${ damage.effective } damage!`)
+    }
   }
 
   end() {
