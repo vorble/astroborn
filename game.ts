@@ -1,5 +1,5 @@
 import { Battle, BattleTemplate } from './battle.js'
-import { Player, playerMakeDefault } from './player.js'
+import { Player, playerMakeDefault, playerResourcesInput, playerCalculate } from './player.js'
 import { Room, RoomExit } from './room.js'
 import { Scene } from './scene.js'
 import { UI } from './ui.js'
@@ -167,7 +167,7 @@ export interface GameAction {
 export class Game {
   ui: UI
   timer: GameTimer
-  state: 'init' | 'main_menu' | 'world' | 'world_menu' | 'battle' | 'scene'
+  state: 'init' | 'main_menu' | 'world' | 'world_menu' | 'battle' | 'scene' | 'game_over'
   world: World
   roomNo: number
   progress: GameProgressTotal
@@ -186,7 +186,7 @@ export class Game {
     this.battle = null
     this.player = playerMakeDefault()
 
-    this.DEBUG_BATTLE = true // TODO make this false eventually
+    this.DEBUG_BATTLE = false
   }
 
   start() {
@@ -222,7 +222,7 @@ export class Game {
     }
   }
 
-  enterState(state: 'init' | 'main_menu' | 'world' | 'world_menu' | 'battle' | 'scene') {
+  enterState(state: 'init' | 'main_menu' | 'world' | 'world_menu' | 'battle' | 'scene' | 'game_over') {
     // Stop and restart the timer as necessary. Doing a stop and then a start will
     // reset the timer so you don't end up entering a battle and unfairly miss a
     // round if the timer is really close to firing already.
@@ -241,17 +241,38 @@ export class Game {
     // this.battle will take it from here
   }
 
-  endBattle() {
+  endBattle(result: 'win' | 'lose') {
     if (this.battle != null) {
       this.ui.targets.restore(this.battle.postState.targets)
       this.ui.actions.restore(this.battle.postState.actions)
       this.enterState(this.battle.postState.state)
+      Object.assign(this.player.resources, playerResourcesInput(this.battle.player.resources))
+      if (result == 'win') {
+        // TODO: Gain exp, do levels up.
+        playerCalculate(this.player)
+        if (this.battle.winAction) {
+          this.doGameAction(this.battle.winAction())
+        }
+        this.player.resources.hp = Math.max(1, this.player.resources.hp) // TODO: Hackish, need to keep 1 hp to keep alive.
+      } else if (result == 'lose') {
+        if (this.battle.loseAction) {
+          this.doGameAction(this.battle.loseAction())
+        } else {
+          this.doGameOver()
+        }
+      }
       this.battle = null
     }
   }
 
   getCurrentRoom(): Room {
     return this.world.getRoom(this.progress.getForRoom(this.roomNo), this.roomNo)
+  }
+
+  updateResources() {
+    this.ui.hp.set(this.player.resources.hp, this.player.hp)
+    this.ui.mp.set(this.player.resources.mp, this.player.mp)
+    this.ui.pp.set(this.player.resources.pp, this.player.pp)
   }
 
   updateWorldButtons() {
@@ -329,6 +350,7 @@ export class Game {
     this.ui.actions.reset()
     this.ui.targets.reset()
     this.ui.narration.reset()
+    this.player = playerMakeDefault()
     this.enterState('world')
     this.updateWorldButtons()
     this.runScene(this.world.getOpeningScene())
@@ -415,6 +437,23 @@ export class Game {
     if (action.battle != null) {
       this.enterBattle(action.battle)
     }
+  }
+
+  doGameOver() {
+    this.enterState('game_over')
+    const blank = { text: '', action: () => {} }
+    this.ui.narration.append(`Game over.`)
+    this.ui.targets.reset()
+    this.ui.actions.setActions([
+      blank, blank, blank,
+      blank,
+      {
+        text: 'Continue',
+        action: () => {
+          this.start()
+        },
+      },
+    ])
   }
 
   doStateWorld() {

@@ -100,6 +100,24 @@ export interface PlayerLike extends PlayerStats {
   status: Array<Status>,
 }
 
+export interface PlayerLikeInput {
+  resources?: PlayerResources,
+  base: PlayerStats,
+  status?: Array<Status>,
+}
+
+export function playerLikeInput(player: PlayerLikeInput): PlayerLike {
+  const base = playerStatsInput(player.base)
+  const result = {
+    ...base,
+    resources: playerResourcesInput(player.resources || player.base),
+    base,
+    status: player.status ? [...player.status] : [],
+  }
+  playerCalculate(result)
+  return result
+}
+
 // These things set the player apart from enemies.
 export interface Player extends PlayerLike {
   equipment: Array<Item>, // WARNING: This field is used to determine whether we have a Player or PlayerLike.

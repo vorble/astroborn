@@ -1,13 +1,13 @@
-import { BattleTemplate, BattleMobTemplate } from '../battle.js'
+import { BattleTemplate, BattleMobInput } from '../battle.js'
 import { GameProgress } from '../game.js'
 import { rollRange } from '../roll.js'
 import { Room } from '../room.js'
 import { World } from '../world.js'
 
-function mobBoreMite(): BattleMobTemplate {
+function mobBoreMite(): BattleMobInput {
   return {
     name: `Bore Mite`,
-    stats: {
+    base: {
       hp: 50,
       mp: 0,
       pp: 0,
