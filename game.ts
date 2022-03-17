@@ -249,6 +249,7 @@ export class Game {
       Object.assign(this.player.resources, playerResourcesInput(this.battle.player.resources))
       if (result == 'win') {
         // TODO: Gain exp, do levels up.
+        this.ui.narration.append(`You gain ${ this.battle.expTally } experience!`)
         playerCalculate(this.player)
         if (this.battle.winAction) {
           this.doGameAction(this.battle.winAction())

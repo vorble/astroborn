@@ -1,12 +1,13 @@
 import { BattleTemplate, BattleMobInput } from '../battle.js'
 import { GameProgress } from '../game.js'
-import { rollRange } from '../roll.js'
+import { rollRange, rollRatio } from '../roll.js'
 import { Room } from '../room.js'
 import { World } from '../world.js'
 
 function mobBoreMite(): BattleMobInput {
   return {
     name: `Bore Mite`,
+    exp: 50,
     base: {
       hp: 50,
       mp: 0,
@@ -23,6 +24,18 @@ function mobBoreMite(): BattleMobInput {
       resmys: 0,
       respsy: 0,
     },
+    decide: (mob, battle, oldActionDone) => {
+      if (!oldActionDone) {
+        return null
+      }
+      const r = rollRatio()
+      if (r < 0.15) {
+        return { position: 'guard' }
+      } else if (r < 0.30) {
+        return { initialNarration: `${ mob.name } lets out a series of clicks.` }
+      }
+      return null
+    }
   }
 }
 

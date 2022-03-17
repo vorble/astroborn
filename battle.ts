@@ -3,6 +3,31 @@ import { PlayerLike, PlayerLikeInput, playerLikeInput, Player, PlayerStats } fro
 import { rollUniform, rollRatio, rollRange } from './roll.js'
 import { UITargetBarState, UIActionGridState } from './ui.js'
 
+function dedupeNames(things: Array<{ name: string }>) {
+  const asciiA = 'A'.codePointAt(0)
+  if (asciiA == null) {
+    throw new Error('Couldn\'t find code point!')
+  }
+  const seen: Map<String, number> = new Map()
+  const dupes: Set<String> = new Set()
+  for (const thing of things) {
+    const multiplicity = (seen.get(thing.name) || 0) + 1
+    seen.set(thing.name, multiplicity)
+    if (multiplicity >= 1) {
+      dupes.add(thing.name)
+    }
+  }
+  for (let i = things.length - 1; i >= 0; --i) {
+    const thing = things[i]
+    if (dupes.has(thing.name)) {
+      const multiplicity = (seen.get(thing.name) || 0) - 1
+      seen.set(thing.name, multiplicity)
+      const c = String.fromCodePoint(asciiA + multiplicity)
+      thing.name += ' ' + c;
+    }
+  }
+}
+
 function calculateBattleDamagePhysical(a: PlayerStats, d: PlayerStats): number {
   const oompf = rollUniform(1.0, 1.5)
   let dmgphy = a.dmgphy
@@ -71,57 +96,95 @@ export interface BattleDamageBase {
   total: number,
 }
 
-export interface BattleDamage {
-  base: BattleDamageBase,
-  pa: number,
-  pi: number,
+export interface BattleDamage extends BattleDamageBase{
+  pa: number | 'miss',
+  pi: number | 'noact',
   effective: number,
-  special: null | 'bad_position',
+  special: null | 'noact' | 'miss',
 }
 
 export interface BattleMob extends PlayerLike {
   name: string,
+  exp: number,
   position: 'fight' | 'guard' | 'left' | 'right' | 'back' | 'duck',
   attackCountdown: number,
   nextAttack: null | BattleMobAttack,
+  decide: (mob: BattleMob, battle: Battle, oldActionDone: boolean) => null | BattleMobDecision,
+  // General purpose state variables.
+  a0: number, a1: number, a2: number, a3: number,
+  b0: number, b1: number, b2: number, b3: number,
+}
+
+// TODO: HERE need an interface for battle decisions like which nextAttack to do next, position changes, no action
+export interface BattleMobDecision {
+  position?: 'fight' | 'guard' | 'left' | 'right' | 'back' | 'duck',
+  attackCountdown?: number,
+  nextAttack?: null | BattleMobAttack,
+  initialNarration?: string,
 }
 
 export interface BattleMobInput extends PlayerLikeInput {
   name: string,
+  exp: number,
+  // Return null to keep current action or do default
+  decide?: (mob: BattleMob, battle: Battle, oldActionDone: boolean) => null | BattleMobDecision,
 }
 
 function battleMobInput(mob: BattleMobInput): BattleMob {
   return {
     name: mob.name,
+    exp: mob.exp,
     position: 'fight',
-    attackCountdown: rollRange(8, 10),
+    attackCountdown: 10,
     nextAttack: null,
+    decide: mob.decide ? mob.decide : () => null,
     ...playerLikeInput(mob),
+    a0: 0, a1: 0, a2: 0, a3: 0,
+    b0: 0, b1: 0, b2: 0, b3: 0,
   }
 }
 
-// Powers are 0 for ineffective, 100 for full power, 200 for double power, etc.
-// fight power is e.g. the power of the attack against the player in the fight position.
+interface BattleMobAttackPowerIn {
+  fight: number | 'noact',
+  guard: number | 'noact',
+  left: number | 'noact',
+  right: number | 'noact',
+  back: number | 'noact',
+  duck: number | 'noact',
+}
+
+interface BattleMobAttackPowerAgainst {
+  fight: number | 'miss',
+  guard: number | 'miss',
+  left: number | 'miss',
+  right: number | 'miss',
+  back: number | 'miss',
+  duck: number | 'miss',
+}
+
 interface BattleMobAttack {
-  // pa, mnemonic "power against". Determines how effective the attack is against someone
-  // in the given position. Scales the attack. 0 for not effective, 100 for regular power,
-  // 200 for double power.
-  paFight: number,
-  paGuard: number,
-  paLeft: number,
-  paRight: number,
-  paBack: number,
-  paDuck: number,
+  powerIn: BattleMobAttackPowerIn,
+  powerAgainst: BattleMobAttackPowerAgainst,
 }
 
 function makeBasicMobAttack(): BattleMobAttack {
   return {
-    paFight: 100,
-    paGuard: 75,
-    paLeft: 85,
-    paRight: 85,
-    paBack: 60,
-    paDuck: 100,
+    powerIn: {
+      fight: 100,
+      guard: 'noact',
+      left: 80,
+      right: 80,
+      back: 75,
+      duck: 75,
+    },
+    powerAgainst: {
+      fight: 100,
+      guard: 75,
+      left: 85,
+      right: 85,
+      back: 60,
+      duck: 100,
+    },
   }
 }
 
@@ -146,55 +209,39 @@ function calculateBattleDamageBase(a: PlayerStats, d: PlayerStats): BattleDamage
 }
 
 // TODO: Need to make space for attack power when in each kind of position.
-function lookupPA(round: BattleAttackRound): number {
-  if (round.defender.position == 'fight') {
-    return round.attacker.attack.paFight
-  } else if (round.defender.position == 'guard') {
-    return round.attacker.attack.paGuard
-  } else if (round.defender.position == 'left') {
-    return round.attacker.attack.paLeft
-  } else if (round.defender.position == 'right') {
-    return round.attacker.attack.paRight
-  } else if (round.defender.position == 'back') {
-    return round.attacker.attack.paBack
-  } else if (round.defender.position == 'duck') {
-    return round.attacker.attack.paDuck
-  }
-  throw new Error(`Assertion error, ${ round.defender.position } unhandled.`)
+function lookupPA(round: BattleAttackRound): (number | 'miss') {
+  return round.attacker.attack.powerAgainst[round.defender.position]
 }
 
-function lookupPI(round: BattleAttackRound): number {
-  if (round.attacker.position == 'fight') {
-    return 100
-  } else if (round.attacker.position == 'guard') {
-    return 0
-  } else if (round.attacker.position == 'left') {
-    return 75
-  } else if (round.attacker.position == 'right') {
-    return 75
-  } else if (round.attacker.position == 'back') {
-    return 75
-  } else if (round.attacker.position == 'duck') {
-    return 75
-  }
-  throw new Error(`Assertion error, ${ round.attacker.position } unhandled.`)
+function lookupPI(round: BattleAttackRound): number | 'noact' {
+  return round.attacker.attack.powerIn[round.attacker.position]
 }
 
 function calculateBattleDamage(round: BattleAttackRound): BattleDamage {
+  // TODO: If offense is much less than defender's defense, there should be an increased chance of missing.
   const base = calculateBattleDamageBase(round.attacker.stats, round.defender.stats)
+  let special: null | 'noact' | 'miss' = null
+  let damage = 0
+  let effective = 0
   const pi = lookupPI(round)
-  const damage = Math.round((pi / 100.0) * base.total)
-  let special: null | 'bad_position' = null
-  if (round.attacker.position == 'guard') {
-    special = 'bad_position'
+  if (pi == 'noact') {
+    special = 'noact'
+  } else {
+    damage = Math.round((pi / 100.0) * base.total)
   }
   const pa = lookupPA(round)
-  const effective = Math.round((pa / 100.0) * damage)
-  return { base, pa, pi, effective, special }
+  if (pa == 'miss') {
+    special = 'miss'
+  } else {
+    effective = Math.round((pa / 100.0) * damage)
+  }
+  return { ...base, pa, pi, effective, special }
 }
 
 export interface BattleTemplate {
   mobs: Array<BattleMobInput>,
+  // Bonus exp from the battle in addition to mob exp.
+  bonusExp?: number,
   winAction?: () => GameAction,
   loseAction?: () => GameAction,
 }
@@ -212,6 +259,7 @@ export class Battle {
   player: BattleMob
   mobs: Array<BattleMob>
   target: BattleMob
+  expTally: number
   winAction?: () => GameAction
   loseAction?: () => GameAction
 
@@ -227,7 +275,12 @@ export class Battle {
       throw new Error(`Cannot create battle with no mobs!`)
     }
     this.mobs = battle.mobs.map((mob) => battleMobInput(mob))
+    dedupeNames(this.mobs)
+    for (const mob of this.mobs) {
+      this.doMobDecision(mob, true) // TODO: Maybe some sort of "first-decision" flag is needed
+    }
     this.target = this.mobs[0]
+    this.expTally = battle.bonusExp == null ? 0 : battle.bonusExp
     this.winAction = battle.winAction
     this.loseAction = battle.loseAction
   }
@@ -244,15 +297,17 @@ export class Battle {
       // Because of the player attack, the mob might be dead already.
       if (mob.resources.hp > 0) {
         mob.attackCountdown -= 1
+        this.doMobDecision(mob, false)
         if (mob.attackCountdown <= 0) {
           this.doMobAttack(mob)
-          mob.attackCountdown = 10
+          this.doMobDecision(mob, true)
         }
       }
       if (mob.resources.hp > 0) {
         living.push(mob)
       } else {
         this.game.ui.narration.append(`${ mob.name } dies!`)
+        this.expTally += mob.exp
       }
     }
     // TODO: end determination and UI update paths could use some work.
@@ -290,25 +345,19 @@ export class Battle {
         stats: mob,
       },
     })
+    mob.resources.hp = Math.max(0, mob.resources.hp - damage.effective)
+    const detail = this.game.DEBUG_BATTLE ? ' ' + JSON.stringify(damage).replace(/:/g, ': ') : ''
+    let message = ''
     if (damage.special == null) {
-      mob.resources.hp = Math.max(0, mob.resources.hp - damage.effective)
-    }
-    if (this.game.DEBUG_BATTLE) {
-      // TODO: Need a good debugging output for damage. This sucks.
-      if (damage.special == 'bad_position') {
-        this.game.ui.narration.append(`You are unable to attack ${ mob.name } in your current position! `
-         + `(${ JSON.stringify(damage).replace(/:/g, ': ') })!`)
-      } else {
-        this.game.ui.narration.append(`You attack ${ mob.name } and deliver ${ damage.effective } damage! `
-         + `(${ JSON.stringify(damage).replace(/:/g, ': ') })!`)
-      }
+      message = `You attack ${ mob.name } and deliver ${ damage.effective } damage${ detail }!`
+    } else if (damage.special == 'noact') {
+      message = `You are unable to attack ${ mob.name } in your current position${ detail }!`
+    } else if (damage.special == 'miss') {
+      message = `You fail to hit ${ mob.name }${ detail }!`
     } else {
-      if (damage.special == 'bad_position') {
-        this.game.ui.narration.append(`You are unable to attack ${ mob.name } in your current position!`)
-      } else {
-        this.game.ui.narration.append(`You attack ${ mob.name } and deliver ${ damage.effective } damage!`)
-      }
+      throw new Error(`Assertion error, unhandled special ${ damage.special }.`) // TODO How to make this a type error?
     }
+    this.game.ui.narration.append(message)
   }
 
   doMobAttack(mob: BattleMob) {
@@ -324,12 +373,53 @@ export class Battle {
       },
     })
     this.player.resources.hp = Math.max(0, this.player.resources.hp - damage.effective)
-    if (this.game.DEBUG_BATTLE) {
-      // TODO: Need a good debugging output for damage. This sucks.
-      this.game.ui.narration.append(`${ mob.name } attacks and delivers ${ damage.effective } damage `
-       + `(${ JSON.stringify(damage).replace(/:/g, ': ') })!`)
+    const detail = this.game.DEBUG_BATTLE ? ' ' + JSON.stringify(damage).replace(/:/g, ': ') : ''
+    let message = ''
+    if (damage.special == null) {
+      message = `${ mob.name } attacks and delivers ${ damage.effective } damage${ detail }!`
+    } else if (damage.special == 'noact') {
+      message = `${ mob.name } is unable to attack in its current position${ detail }!`
+    } else if (damage.special == 'miss') {
+      message = `${ mob.name } fails to hit you${ detail }!`
     } else {
-      this.game.ui.narration.append(`${ mob.name } attacks and delivers ${ damage.effective } damage!`)
+      throw new Error(`Assertion error, unhandled special ${ damage.special }.`) // TODO How to make this a type error?
+    }
+    this.game.ui.narration.append(message)
+  }
+
+  doMobDecision(mob: BattleMob, oldActionDone: boolean) {
+    const decide = mob.decide(mob, this, oldActionDone)
+    if (decide == null) {
+      if (oldActionDone) {
+        mob.nextAttack = null
+        mob.attackCountdown = 10
+        this.doMobGoPosition(mob, 'fight')
+      }
+    } else {
+      if (decide.nextAttack) {
+        mob.nextAttack = decide.nextAttack
+      } else {
+        if (oldActionDone) {
+          mob.nextAttack = null
+        }
+      }
+      if (typeof decide.attackCountdown == 'number') {
+        mob.attackCountdown = decide.attackCountdown
+      } else {
+        if (oldActionDone) {
+          mob.attackCountdown = 10
+        }
+      }
+      if (decide.position) {
+        this.doMobGoPosition(mob, decide.position)
+      } else {
+        if (oldActionDone) {
+          this.doMobGoPosition(mob, 'fight')
+        }
+      }
+      if (decide.initialNarration) {
+        this.game.ui.narration.append(decide.initialNarration)
+      }
     }
   }
 
@@ -391,6 +481,36 @@ export class Battle {
     ])
   }
 
+  doMobGoPosition(mob: BattleMob, position: 'fight' | 'guard' | 'left' | 'right' | 'back' | 'duck') {
+    if (position != mob.position) {
+      mob.position = position
+      switch (position) {
+        case 'fight':
+          this.game.ui.narration.append(`${ mob.name } assumes a fighting position.`)
+          break
+        case 'guard':
+          this.game.ui.narration.append(`${ mob.name } assumes a guarding position.`)
+          break
+        case 'left':
+          this.game.ui.narration.append(`${ mob.name } moves to the left.`)
+          break
+        case 'right':
+          this.game.ui.narration.append(`${ mob.name } moves to the right.`)
+          break
+        case 'back':
+          this.game.ui.narration.append(`${ mob.name } moves back.`)
+          break
+        case 'duck':
+          this.game.ui.narration.append(`${ mob.name } gets low to the ground.`)
+          break
+        default:
+          // TODO: How to make having new ones be a type error?
+          throw new Error(`Assertion error, ${ position } unhandled.`)
+          break
+      }
+    }
+  }
+
   doGoPosition(position: 'fight' | 'guard' | 'left' | 'right' | 'back' | 'duck') {
     if (position != this.player.position) {
       this.player.position = position
@@ -413,10 +533,12 @@ export class Battle {
         case 'duck':
           this.game.ui.narration.append(`You get low to the ground.`)
           break
+        default:
+          // TODO: How to make having new ones be a type error?
+          throw new Error(`Assertion error, ${ position } unhandled.`)
+          break
       }
       this.updateBattleButtons()
     }
   }
 }
-
-

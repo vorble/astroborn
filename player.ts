@@ -120,6 +120,8 @@ export function playerLikeInput(player: PlayerLikeInput): PlayerLike {
 
 // These things set the player apart from enemies.
 export interface Player extends PlayerLike {
+  exp: number,
+  level: number,
   equipment: Array<Item>, // WARNING: This field is used to determine whether we have a Player or PlayerLike.
 }
 
@@ -145,6 +147,8 @@ export function playerMakeDefault(): Player {
     resources: playerResourcesInput(base),
     base: base,
     status: [],
+    exp: 0,
+    level: 1,
     equipment: [],
   }
 }
