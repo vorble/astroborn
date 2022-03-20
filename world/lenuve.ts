@@ -1,8 +1,24 @@
 import { BattleTemplate, BattleMobInput } from '../battle.js'
 import { GameProgress } from '../game.js'
+import { Item } from '../item.js'
+import { playerStatsInput } from '../player.js'
 import { rollRange, rollRatio } from '../roll.js'
-import { Room } from '../room.js'
+import { Room, RoomThing} from '../room.js'
+import { Scene } from '../scene.js'
 import { World } from '../world.js'
+
+const itemWindBandana: Item = {
+  name: `Wind Bandana`,
+  description: `It's a soft linen bandana, yellowed over the years. The Cup's crest of the wind is sewn upon it.`,
+  kind: 'head',
+  playerStatsMod: {
+    add: playerStatsInput({
+      off: 1,
+      dmgele: 1,
+      resele: 1,
+    }),
+  }
+}
 
 function mobBoreMite(): BattleMobInput {
   return {
@@ -48,6 +64,22 @@ function makeSampleBattle(): BattleTemplate {
   }
 }
 
+function makePickupItem(item: Item, variable: string, progress: GameProgress): Array<RoomThing> {
+  if (progress.get(variable)) {
+    return []
+  }
+  return [{
+    name: itemWindBandana.name,
+    lookAt: itemWindBandana.description,
+    take: () => {
+      progress.set(variable, 1)
+      return {
+        receiveItems: [item],
+      }
+    },
+  }]
+}
+
 function roomOops(): Room {
   const room = {
     description: `You are in a vast, dark emptiness. In front of you is a white light.`,
@@ -88,13 +120,55 @@ function roomInRowHouse(progress: GameProgress): Room {
           ? `It's purposefully tidy.`
           : `It's not quite neat with the linens pushed to one side as if the last occupant
             did not get much rest.`,
+        use: () => {
+          if (progress.get('$bed_made')) {
+            return {
+              narration: `The bed is already tidy.`,
+            }
+          } else {
+            progress.set('$bed_made', 1)
+            progress.set('$bandana_out', 1)
+            return {
+              narration: `You pull the linens evenly over the mattress. A bandana was in the mess.`
+            }
+          }
+        },
       },
       {
-        name: `Hole`,
-        lookAt: `It's a hole in the wood. You might be able to get a closer look.`,
+        name: `Common Wall`,
+        lookAt: `The long wall is shared with the adjoining room.`,
         use: () => {
           return {
-            narration: `You look into the hole. Something is inside!`,
+            narration: `Getting close to the wall to listen, you can hear a calm, muffled voice and the indistinct patter of activity.`,
+          }
+        }
+      },
+      {
+        name: `Rack`,
+        lookAt: `Affixed to the wall, small shelves and pegs offer a place to put clothes.`,
+      },
+      {
+        name: `Drawer`,
+        lookAt: `It's a worn and marked set of wooden drawers that has been used by many over the years.`,
+      },
+      {
+        name: `Slit`,
+        lookAt: `A delicate beam of light illuminates a thin blade of dust in the air, laying as a skewed line across the floor and straight up the adjacent wall.`,
+        use: () => {
+          return {
+            narration: `You peer through the slit into the outdoors. You see the back meadow and the top of the latrine some ways in the distance.`,
+          }
+        },
+      },
+      ...(
+        progress.get('$bed_made') ? makePickupItem(itemWindBandana, '$bandana_got', progress) : []
+      ),
+      {
+        name: `DEBUG`,
+        lookAt: `It's a DEBUG protruding into this universe. You might be able to get a closer look.`,
+        use: () => {
+          return {
+            narration: `You look into the DEBUG. Something is inside!`,
             battle: makeSampleBattle(),
           }
         },
@@ -120,6 +194,50 @@ function roomRowHouseLawn(progress: GameProgress): Room {
           roomNo: 1000,
         },
       },
+      {
+        name: `Meadow`,
+        lookAt: `Worn grass gives way to a meadow leading toward the forest.`,
+        exit: {
+          goNarration: `you go across the lawn and start to push your way through the tall grass.`,
+          roomNo: 1002,
+        },
+      },
+      {
+        name: `Rear`,
+        lookAt: `A path leads around the houses along the precipice of the longer grass just a short ways out.`,
+        exit: {
+          goNarration: `You go around to the back of the houses.`,
+          roomNo: 1003,
+        },
+      },
+      {
+        name: `Row Houses`,
+        lookAt: `It's a series of row houses built from dark wooden planks, but are greyed and faded from years in the sun.`,
+      },
+      // TODO: Greg and Maun.
+    ],
+  }
+
+  return room
+}
+
+function roomMeadow(progress: GameProgress): Room {
+  const room = {
+    description: `You are in a meadow of tall grass and wildflowers situated between the houses on the outskirts of town and a forest.
+      The pathway is obvious, but not so worn down as to trample the grass completely.`,
+    things: [
+      {
+        name: `Houses`,
+        lookAt: `The pathway leads toward the lawn and some houses not far off.`,
+        exit: {
+          goNarration: `You push through the tall grass toward the houses and reach the lawn.`,
+          roomNo: 1001,
+        },
+      },
+      {
+        name: `Grass`,
+        lookAt: `The grass moves gently with a hiss as the waves of wind draw over it.`,
+      },
     ],
     // This bit of ambiance isn't very important to the room and probably belongs more in the meadow.
     tick: () => {
@@ -140,11 +258,62 @@ function roomRowHouseLawn(progress: GameProgress): Room {
   return room
 }
 
+function roomBackYard(progress: GameProgress): Room {
+  const room = {
+    description: `You are behind the row of houses on a walkway leading to a latrine. Gentle undulations of
+    wind bring a light odorous scent to your nose.`,
+    things: [
+      {
+        name: `Front`,
+        lookAt: `The walkway leads around to the front of the houses.`,
+        exit: {
+          goNarration: `You go along the walkway to the front of the houses.`,
+          roomNo: 1001,
+        },
+      },
+      {
+        name: `Latrine`,
+        lookAt: `A small, enclosed structure hosts an area for relieving oneself in private a short distance away.`,
+      },
+      {
+        name: `Windows`,
+        lookAt: `Each house in the row has a small window.`,
+        use: () => {
+          const intro = `You come up to the back of the houses and pull yourself up to peer into the window.`
+          if (!progress.get('$voyeur')) {
+            progress.set('$voyeur', 1)
+            return {
+              scene: new Scene([
+                intro,
+                `Ria is in the room mending a cloth sack. She doesn't seem to notice you as your shadow does
+                  not stretch into the window.`,
+                `Climbing down with a thud, Ria's voice reaches out with startled hesitation "H-Hey!"`,
+              ])
+            }
+          } else {
+            return {
+              scene: new Scene([
+                intro,
+                `The room is empty.`,
+                `You climb down.`,
+              ])
+            }
+          }
+        },
+      },
+    ],
+  }
+
+  return room
+}
+
 export function init(world: World) {
   world.registerZone(1, (progress, roomNo) => {
     switch (roomNo) {
-      case 1000: return roomInRowHouse(progress) 
-      case 1001: return roomRowHouseLawn(progress) 
+      case 1000: return roomInRowHouse(progress)
+      case 1001: return roomRowHouseLawn(progress)
+      case 1002: return roomMeadow(progress)
+      case 1003: return roomBackYard(progress)
     }
     return roomOops()
   });

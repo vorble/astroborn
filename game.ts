@@ -1,4 +1,5 @@
 import { Battle, BattleTemplate } from './battle.js'
+import { Item } from './item.js'
 import { Player, playerMakeDefault, playerResourcesInput, playerCalculate, getPlayerLevelEntry } from './player.js'
 import { Room, RoomExit } from './room.js'
 import { Scene } from './scene.js'
@@ -159,9 +160,11 @@ class GameProgressTotal {
 export interface GameAction {
   // Should a narration be displayed?
   narration?: string,
+  scene?: Scene,
   // Should the targets bar and action grid be updated?
   updated?: boolean,
   battle?: BattleTemplate,
+  receiveItems?: Array<Item>,
 }
 
 export class Game {
@@ -338,6 +341,10 @@ export class Game {
         action: () => this.doWorldOpenUseMenu(),
       },
       {
+        text: 'Take...',
+        action: () => this.doWorldOpenTakeMenu(),
+      },
+      {
         text: 'Score',
         action: () => this.doWorldScore(),
       },
@@ -464,12 +471,50 @@ export class Game {
     this.ui.actions.setList(items, close)
   }
 
+  doWorldOpenTakeMenu() {
+    const room = this.getCurrentRoom()
+    const prevState = this.state
+    this.enterState('world_menu')
+    const targets = this.ui.targets.save()
+    const actions = this.ui.actions.save()
+    const close = () => {
+      this.ui.targets.restore(targets)
+      this.ui.actions.restore(actions)
+      this.enterState(prevState)
+    }
+    const items = room.things.filter((thing) => thing.take != null).map((thing) => {
+      if (thing.take == null) {
+        throw new Error(`Assertion error, ineffective filter.`)
+      }
+      const take = thing.take
+      return {
+        text: thing.name,
+        action: () => {
+          close()
+          this.doGameAction(take())
+        },
+      }
+    })
+    this.ui.targets.reset()
+    this.ui.actions.setList(items, close)
+  }
+
   doGameAction(action: GameAction) {
     if (action.updated != null && action.updated) {
       this.updateWorldButtons()
     }
+    if (action.receiveItems != null) {
+      for (const item of action.receiveItems) {
+        this.ui.narration.append(`You receive ${ item.name }.`)
+        this.player.items.push(item)
+      }
+      this.updateWorldButtons()
+    }
     if (action.narration != null) {
       this.ui.narration.append(action.narration)
+    }
+    if (action.scene != null) {
+      this.runScene(action.scene)
     }
     if (action.battle != null) {
       this.enterBattle(action.battle)

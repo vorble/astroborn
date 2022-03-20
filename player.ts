@@ -166,6 +166,7 @@ export interface Player extends PlayerLike {
   exp: number,
   level: number,
   equipment: Array<Item>, // WARNING: This field is used to determine whether we have a Player or PlayerLike.
+  items: Array<Item>,
 }
 
 export function playerMakeDefault(): Player {
@@ -193,6 +194,7 @@ export function playerMakeDefault(): Player {
     exp: 0,
     level: 1,
     equipment: [],
+    items: [],
   }
 }
 

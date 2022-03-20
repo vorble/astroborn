@@ -1,6 +1,8 @@
 import { PlayerStatsMod } from './player.js'
 
 export interface Item {
-  kind: 'item' | 'weapon' | 'helmet' | 'hands' | 'body' | 'feet'
+  name: string,
+  description: string,
+  kind: 'item' | 'weapon' | 'head' | 'hands' | 'body' | 'feet'
   playerStatsMod?: PlayerStatsMod,
 }

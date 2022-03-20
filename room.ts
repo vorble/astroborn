@@ -11,6 +11,7 @@ export interface RoomThing {
   lookAt: string,
   exit?: RoomExit,
   use?: () => GameAction,
+  take?: () => GameAction,
 }
 
 export interface RoomExit {
