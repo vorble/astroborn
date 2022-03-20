@@ -1,5 +1,5 @@
 import { Battle, BattleTemplate } from './battle.js'
-import { Player, playerMakeDefault, playerResourcesInput, playerCalculate } from './player.js'
+import { Player, playerMakeDefault, playerResourcesInput, playerCalculate, getPlayerLevelEntry } from './player.js'
 import { Room, RoomExit } from './room.js'
 import { Scene } from './scene.js'
 import { UI } from './ui.js'
@@ -248,8 +248,40 @@ export class Game {
       this.enterState(this.battle.postState.state)
       Object.assign(this.player.resources, playerResourcesInput(this.battle.player.resources))
       if (result == 'win') {
-        // TODO: Gain exp, do levels up.
         this.ui.narration.append(`You gain ${ this.battle.expTally } experience!`)
+        this.player.exp += this.battle.expTally
+        let nextLevel = getPlayerLevelEntry(this.player.level + 1)
+        while (nextLevel != null && this.player.exp >= nextLevel.exp) {
+          this.player.level += 1
+          // LEVEL UP
+          // TODO: how to make missing things a type error?
+          this.ui.narration.append(`Your level has increased to ${ this.player.level }!`)
+          if (nextLevel.hp != this.player.base.hp) {
+            this.ui.narration.append(`HP has increased by ${ nextLevel.hp - this.player.base.hp }!`)
+          }
+          this.player.base.hp = nextLevel.hp
+          if (nextLevel.mp != this.player.base.mp) {
+            this.ui.narration.append(`MP has increased by ${ nextLevel.mp - this.player.base.mp }!`)
+          }
+          this.player.base.mp = nextLevel.mp
+          if (nextLevel.pp != this.player.base.pp) {
+            this.ui.narration.append(`PP has increased by ${ nextLevel.pp - this.player.base.pp }!`)
+          }
+          this.player.base.pp = nextLevel.pp
+          if (nextLevel.off != this.player.base.off) {
+            this.ui.narration.append(`OFF has increased by ${ nextLevel.off - this.player.base.off }!`)
+          }
+          this.player.base.def = nextLevel.def
+          if (nextLevel.def != this.player.base.def) {
+            this.ui.narration.append(`DEF has increased by ${ nextLevel.def - this.player.base.def }!`)
+          }
+          this.player.base.def = nextLevel.def
+          if (nextLevel.psy != this.player.base.psy) {
+            this.ui.narration.append(`PSY has increased by ${ nextLevel.psy - this.player.base.psy }!`)
+          }
+          this.player.base.psy = nextLevel.psy
+          nextLevel = getPlayerLevelEntry(this.player.level + 1)
+        }
         playerCalculate(this.player)
         if (this.battle.winAction) {
           this.doGameAction(this.battle.winAction())
@@ -304,6 +336,10 @@ export class Game {
       {
         text: 'Use...',
         action: () => this.doWorldOpenUseMenu(),
+      },
+      {
+        text: 'Score',
+        action: () => this.doWorldScore(),
       },
     ])
   }
@@ -472,5 +508,28 @@ export class Game {
       throw new Error(`Assertion error, battle is null!`)
     }
     this.battle.tick()
+  }
+
+  doWorldScore() {
+    const nextLevel = getPlayerLevelEntry(this.player.level + 1)
+    let levelSaying = `You are at the maximum level.`
+    if (nextLevel != null) {
+      levelSaying = `You require ${ nextLevel.exp - this.player.exp } EXP to reach the next level.`
+    }
+    this.ui.narration.append(`You are level ${ this.player.level }. ${ levelSaying }`)
+    this.ui.narration.append(`HP ${ this.player.resources.hp }/${ this.player.hp } `
+      + `MP ${ this.player.resources.mp }/${ this.player.mp } `
+      + `PP ${ this.player.resources.pp }/${ this.player.pp }`)
+    this.ui.narration.append(`OFF ${ this.player.off } `
+      + `DEF ${ this.player.def } `
+      + `PSY ${ this.player.psy }`)
+    this.ui.narration.append(`DMG PHY ${ this.player.dmgphy } `
+      + `ELE ${ this.player.dmgele } `
+      + `MYS ${ this.player.dmgmys } `
+      + `PSY ${ this.player.dmgpsy }`)
+    this.ui.narration.append(`RES PHY ${ this.player.resphy } `
+      + `ELE ${ this.player.resele } `
+      + `MYS ${ this.player.resmys } `
+      + `PSY ${ this.player.respsy }`)
   }
 }

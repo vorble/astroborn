@@ -1,6 +1,39 @@
 import { Item } from './item.js'
 import { Status } from './status.js'
 
+// Cumulative EXP required to reach a given level. The index in the array is the target level.
+const LEVEL_TABLE: Array<PlayerLevelEntry> = [
+  { exp:      0, hp:     0, mp:  0, pp:  0, off:  0, def:  0, psy:  0 },
+  // Level 1
+  { exp:      0, hp:   100, mp:  45, pp:  30, off: 15, def: 17, psy: 12 },
+  { exp:    200, hp:   110, mp:  50, pp:  33, off: 16, def: 17, psy: 12 },
+  { exp:    400, hp:   121, mp:  56, pp:  37, off: 16, def: 18, psy: 12 },
+  { exp:    600, hp:   132, mp:  62, pp:  41, off: 16, def: 18, psy: 13 },
+  { exp:   1000, hp:   146, mp:  69, pp:  46, off: 17, def: 18, psy: 13 },
+  { exp:   1400, hp:   160, mp:  76, pp:  50, off: 17, def: 19, psy: 13 },
+  { exp:   1800, hp:   175, mp:  83, pp:  55, off: 17, def: 19, psy: 14 },
+  { exp:   2500, hp:   199, mp:  90, pp:  61, off: 18, def: 19, psy: 14 },
+  { exp:   3500, hp:   230, mp:  99, pp:  66, off: 18, def: 20, psy: 14 },
+  // Level 10
+  { exp:   5000, hp:   262, mp: 108, pp:  72, off: 18, def: 20, psy: 15 },
+  { exp:  10000, hp:   319, mp: 117, pp:  78, off: 19, def: 20, psy: 15 },
+  { exp:  15000, hp:   371, mp: 127, pp:  85, off: 19, def: 21, psy: 15 },
+  { exp:  22000, hp:   470, mp: 138, pp:  92, off: 19, def: 21, psy: 16 },
+  { exp:  30000, hp:   585, mp: 149, pp:  99, off: 20, def: 21, psy: 16 },
+  { exp:  40000, hp:   699, mp: 162, pp: 107, off: 20, def: 22, psy: 16 },
+  { exp:  54000, hp:   810, mp: 175, pp: 115, off: 20, def: 22, psy: 17 },
+  { exp:  69000, hp:   950, mp: 188, pp: 125, off: 21, def: 22, psy: 17 },
+  { exp:  88000, hp:  1022, mp: 201, pp: 134, off: 21, def: 23, psy: 17 },
+  { exp: 100000, hp:  1175, mp: 218, pp: 145, off: 21, def: 23, psy: 18 },
+  // Level 20
+  { exp: 120000, hp:  1400, mp: 237, pp: 156, off: 22, def: 24, psy: 19 },
+]
+
+LEVEL_TABLE.forEach(Object.freeze)
+Object.freeze(LEVEL_TABLE)
+
+const MAX_LEVEL = LEVEL_TABLE.length - 1
+
 export interface PlayerResources {
   hp: number,
   mp: number,
@@ -19,6 +52,16 @@ export function playerResourcesInput(input: PlayerResourcesInput) {
     mp: input.mp || 0,
     pp: input.pp || 0,
   }
+}
+
+export interface PlayerLevelEntry {
+  exp: number,
+  hp: number,
+  mp: number,
+  pp: number,
+  off: number,
+  def: number,
+  psy: number,
 }
 
 export interface PlayerStats {
@@ -151,6 +194,13 @@ export function playerMakeDefault(): Player {
     level: 1,
     equipment: [],
   }
+}
+
+export function getPlayerLevelEntry(level: number): null | PlayerLevelEntry {
+  if (level < 0 || level > MAX_LEVEL) {
+    return null
+  }
+  return LEVEL_TABLE[level]
 }
 
 export interface PlayerStatsMod {
