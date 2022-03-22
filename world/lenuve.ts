@@ -1,5 +1,5 @@
 import { BattleTemplate, BattleMobInput } from '../battle.js'
-import { GameProgress } from '../game.js'
+import { GameProgress, GameAction } from '../game.js'
 import { Item } from '../item.js'
 import { playerStatsInput } from '../player.js'
 import { rollRange, rollRatio } from '../roll.js'
@@ -17,6 +17,44 @@ const itemWindBandana: Item = {
       dmgele: 1,
       resele: 1,
     }),
+  }
+}
+
+function windy(progress: GameProgress): null | GameAction {
+  let count = progress.get('ambiance') // ephemeral variable
+  let max = progress.get('ambiance_max')
+  if (max == 0) {
+    progress.set('ambiance_max', max = rollRange(75, 250))
+  }
+  progress.set('ambiance', count = count + 1)
+  if (count >= max) {
+    progress.set('ambiance', 0)
+    progress.set('ambiance_max', rollRange(75, 250))
+    return { narration: `The wind blows gently around you.` }
+  }
+  return null
+}
+
+function mobBushTail(): BattleMobInput {
+  return {
+    name: `Bush Tail`,
+    exp: 10,
+    base: {
+      hp: 25,
+      mp: 0,
+      pp: 0,
+      off: 10,
+      def: 10,
+      psy: 0,
+      dmgphy: 3,
+      dmgele: 0,
+      dmgmys: 0,
+      dmgpsy: 0,
+      resphy: 6,
+      resele: 0,
+      resmys: 0,
+      respsy: 0,
+    },
   }
 }
 
@@ -45,10 +83,38 @@ function mobBoreMite(): BattleMobInput {
         return null
       }
       const r = rollRatio()
-      if (r < 0.15) {
+      if (r < 0.05) {
         return { position: 'guard' }
-      } else if (r < 0.30) {
+      } else if (r < 0.10) {
         return { initialNarration: `${ mob.name } lets out a series of clicks.` }
+      } else if (r < 0.20) {
+        const which = rollRatio() <= 0.5 ? 'right' : 'left'
+        const left = which == 'left' ? 200 : 'miss'
+        const right = which == 'right' ? 200 : 'miss'
+        return {
+          initialNarration: `${ mob.name } raises its ${ which } claw...`,
+          attackCountdown: 15,
+          position: 'fight',
+          nextAttack: {
+            powerIn: {
+              fight: 100,
+              guard: 'noact',
+              left: 'noact',
+              right: 'noact',
+              back: 'noact',
+              duck: 'noact',
+            },
+            powerAgainst: {
+              fight: 150,
+              guard: 100,
+              left: left,
+              right: right,
+              back: 150,
+              duck: 150,
+            },
+            specialNarrationDo: `${ mob.name } slams down its ${ which } claw!`,
+          },
+        }
       }
       return null
     }
@@ -198,7 +264,7 @@ function roomRowHouseLawn(progress: GameProgress): Room {
         name: `Meadow`,
         lookAt: `Worn grass gives way to a meadow leading toward the forest.`,
         exit: {
-          goNarration: `you go across the lawn and start to push your way through the tall grass.`,
+          goNarration: `You go across the lawn and start to push your way through the tall grass.`,
           roomNo: 1002,
         },
       },
@@ -214,7 +280,28 @@ function roomRowHouseLawn(progress: GameProgress): Room {
         name: `Row Houses`,
         lookAt: `It's a series of row houses built from dark wooden planks, but are greyed and faded from years in the sun.`,
       },
-      // TODO: Greg and Maun.
+      {
+        name: `Greg and Maun`,
+        lookAt: `Greg and Maun, young men, are riled up on the lawn, talking and joking with smiles on their faces.`,
+        isHereDescription: `Greg and Maun are raucously joking in the lawn.`,
+        talk: [
+          {
+            topic: `Funny?`,
+            action: () => {
+              return {
+                scene: new Scene([
+                  `You ask about what's so funny. Greg replies with a smile,
+                    "Maun was telling me the gopher he saw cutting wood yesterday."`,
+                  `Maun interjects, "Looking at me like this:" He tilts his head and
+                    exposes his front teeth, raising his left eyebrow.`,
+                  `Greg and Maun continue their playful banter and make other animalistic
+                    motions toward each other.`
+                ])
+              }
+            },
+          },
+        ],
+      },
     ],
   }
 
@@ -235,22 +322,26 @@ function roomMeadow(progress: GameProgress): Room {
         },
       },
       {
+        name: `Forest`,
+        lookAt: `The pathway continues toward the forest.`,
+        exit: {
+          goNarration: `You push through the tall grass toward the forest.`,
+          roomNo: 1004,
+        },
+      },
+      {
         name: `Grass`,
         lookAt: `The grass moves gently with a hiss as the waves of wind draw over it.`,
       },
     ],
-    // This bit of ambiance isn't very important to the room and probably belongs more in the meadow.
-    tick: () => {
-      let count = progress.get('ambiance') // ephemeral variable
-      let max = progress.get('ambiance_max')
-      if (max == 0) {
-        progress.set('ambiance_max', max = rollRange(75, 250))
-      }
-      progress.set('ambiance', count = count + 1)
-      if (count >= max) {
-        progress.set('ambiance', 0)
-        progress.set('ambiance_max', rollRange(75, 250))
-        return { narration: `The wind blows gently around you.` }
+    tick: () => windy(progress),
+    battle: () => {
+      if (rollRatio() <= 0.20) {
+        return {
+          battle: {
+           mobs: [mobBushTail()],
+          }
+        }
       }
     },
   }
@@ -307,6 +398,61 @@ function roomBackYard(progress: GameProgress): Room {
   return room
 }
 
+function roomOutsideTheForest(progress: GameProgress): Room {
+  const room = {
+    description: `You are surrounded by long, hissing grass and gently swaying flowers upon a lightly trodden path.
+      In one direction lies more grass and in the other lies a forest whose tree tops are visible over the surrounding foliage.`,
+    things: [
+      {
+        name: `Grass`,
+        lookAt: `Tall grass is lightly trodden to guide you along a pathway.`,
+        exit: {
+          goNarration: `You push forward through the grass.`,
+          roomNo: 1002,
+        },
+      },
+      {
+        name: `Forest`,
+        lookAt: `Tall grass is lightly trodden to guide you along a pathway toward the forest.`,
+        exit: {
+          goNarration: `You push forward through the grass and shrubbery as you make your way toward the forest.`,
+          roomNo: 1005,
+        },
+      },
+    ],
+    tick: () => windy(progress),
+    battle: () => {
+      if (rollRatio() <= 0.20) {
+        return {
+          battle: {
+           mobs: [mobBushTail()],
+          }
+        }
+      }
+    },
+  }
+
+  return room
+}
+
+function roomForestOutskirts(progress: GameProgress): Room {
+  const room = {
+    description: `You are in the well-traveled space between thick shrubbery amidst the tall trees that define the forest's south-western face.`,
+    things: [
+      {
+        name: `Meadow`,
+        lookAt: `Shrubbery gives way to a meadow of tall grass through the well-traveled exit from the forest.`,
+        exit: {
+          goNarration: `You go along the path and begin to push through taller and taller grass.`,
+          roomNo: 1004,
+        },
+      },
+    ],
+  }
+
+  return room
+}
+
 export function init(world: World) {
   world.registerZone(1, (progress, roomNo) => {
     switch (roomNo) {
@@ -314,6 +460,8 @@ export function init(world: World) {
       case 1001: return roomRowHouseLawn(progress)
       case 1002: return roomMeadow(progress)
       case 1003: return roomBackYard(progress)
+      case 1004: return roomOutsideTheForest(progress)
+      case 1005: return roomForestOutskirts(progress)
     }
     return roomOops()
   });
