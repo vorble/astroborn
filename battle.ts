@@ -115,7 +115,6 @@ export interface BattleMob extends PlayerLike {
   b0: number, b1: number, b2: number, b3: number,
 }
 
-// TODO: HERE need an interface for battle decisions like which nextAttack to do next, position changes, no action
 export interface BattleMobDecision {
   position?: 'fight' | 'guard' | 'left' | 'right' | 'back' | 'duck',
   attackCountdown?: number,
@@ -209,7 +208,6 @@ function calculateBattleDamageBase(a: PlayerStats, d: PlayerStats): BattleDamage
   return { phy, ele, mys, psy, total: phy + ele + mys + psy }
 }
 
-// TODO: Need to make space for attack power when in each kind of position.
 function lookupPA(round: BattleAttackRound): (number | 'miss') {
   return round.attacker.attack.powerAgainst[round.defender.position]
 }

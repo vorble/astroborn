@@ -265,7 +265,7 @@ function roomRowHouseLawn(progress: GameProgress): Room {
         lookAt: `Worn grass gives way to a meadow leading toward the forest.`,
         exit: {
           goNarration: `You go across the lawn and start to push your way through the tall grass.`,
-          roomNo: 1002,
+          roomNo: 1003,
         },
       },
       {
@@ -273,7 +273,7 @@ function roomRowHouseLawn(progress: GameProgress): Room {
         lookAt: `A path leads around the houses along the precipice of the longer grass just a short ways out.`,
         exit: {
           goNarration: `You go around to the back of the houses.`,
-          roomNo: 1003,
+          roomNo: 1002,
         },
       },
       {
@@ -303,47 +303,6 @@ function roomRowHouseLawn(progress: GameProgress): Room {
         ],
       },
     ],
-  }
-
-  return room
-}
-
-function roomMeadow(progress: GameProgress): Room {
-  const room = {
-    description: `You are in a meadow of tall grass and wildflowers situated between the houses on the outskirts of town and a forest.
-      The pathway is obvious, but not so worn down as to trample the grass completely.`,
-    things: [
-      {
-        name: `Houses`,
-        lookAt: `The pathway leads toward the lawn and some houses not far off.`,
-        exit: {
-          goNarration: `You push through the tall grass toward the houses and reach the lawn.`,
-          roomNo: 1001,
-        },
-      },
-      {
-        name: `Forest`,
-        lookAt: `The pathway continues toward the forest.`,
-        exit: {
-          goNarration: `You push through the tall grass toward the forest.`,
-          roomNo: 1004,
-        },
-      },
-      {
-        name: `Grass`,
-        lookAt: `The grass moves gently with a hiss as the waves of wind draw over it.`,
-      },
-    ],
-    tick: () => windy(progress),
-    battle: () => {
-      if (rollRatio() <= 0.20) {
-        return {
-          battle: {
-           mobs: [mobBushTail()],
-          }
-        }
-      }
-    },
   }
 
   return room
@@ -398,6 +357,51 @@ function roomBackYard(progress: GameProgress): Room {
   return room
 }
 
+function roomMeadow(progress: GameProgress): Room {
+  const room = {
+    description: `You are in a meadow of tall grass and wildflowers situated between the houses on the outskirts of town and a forest.
+      The pathway is obvious, but not so worn down as to trample the grass completely.`,
+    things: [
+      {
+        name: `Houses`,
+        lookAt: `The pathway leads toward the lawn and some houses not far off.`,
+        exit: {
+          goNarration: `You push through the tall grass toward the houses and reach the lawn.`,
+          roomNo: 1001,
+        },
+      },
+      {
+        name: `Forest`,
+        lookAt: `The pathway continues toward the forest.`,
+        exit: {
+          goNarration: `You push through the tall grass toward the forest.`,
+          roomNo: 1010,
+        },
+      },
+      {
+        name: `Grass`,
+        lookAt: `The grass moves gently with a hiss as the waves of wind draw over it.`,
+      },
+      {
+        name: `Flowers`,
+        lookAt: `Hearty violet and crimson flowers sprout tall through the grass.`,
+      },
+    ],
+    tick: () => windy(progress),
+    battle: () => {
+      if (rollRatio() <= 0.20) {
+        return {
+          battle: {
+           mobs: [mobBushTail()],
+          }
+        }
+      }
+    },
+  }
+
+  return room
+}
+
 function roomOutsideTheForest(progress: GameProgress): Room {
   const room = {
     description: `You are surrounded by long, hissing grass and gently swaying flowers upon a lightly trodden path.
@@ -408,15 +412,19 @@ function roomOutsideTheForest(progress: GameProgress): Room {
         lookAt: `Tall grass is lightly trodden to guide you along a pathway.`,
         exit: {
           goNarration: `You push forward through the grass.`,
-          roomNo: 1002,
+          roomNo: 1003,
         },
+      },
+      {
+        name: `Flowers`,
+        lookAt: `Bulbous yellow flowers peer over tall grass.`,
       },
       {
         name: `Forest`,
         lookAt: `Tall grass is lightly trodden to guide you along a pathway toward the forest.`,
         exit: {
           goNarration: `You push forward through the grass and shrubbery as you make your way toward the forest.`,
-          roomNo: 1005,
+          roomNo: 1011,
         },
       },
     ],
@@ -437,15 +445,23 @@ function roomOutsideTheForest(progress: GameProgress): Room {
 
 function roomForestOutskirts(progress: GameProgress): Room {
   const room = {
-    description: `You are in the well-traveled space between thick shrubbery amidst the tall trees that define the forest's south-western face.`,
+    description: `You are in the well-traveled space between thick shrubbery amidst the tall trees, draped in vinery, that define the forest's south-western face.`,
     things: [
       {
         name: `Meadow`,
         lookAt: `Shrubbery gives way to a meadow of tall grass through the well-traveled exit from the forest.`,
         exit: {
           goNarration: `You go along the path and begin to push through taller and taller grass.`,
-          roomNo: 1004,
+          roomNo: 1010,
         },
+      },
+      {
+        name: `Trees`,
+        lookAt: `The vine covered trees are smaller here than further into the forest.`,
+      },
+      {
+        name: `Vines`,
+        lookAt: `Fibrous vines hang loosely, but firmly from the branches and sibling trunks of the trees here.`,
       },
     ],
   }
@@ -458,10 +474,10 @@ export function init(world: World) {
     switch (roomNo) {
       case 1000: return roomInRowHouse(progress)
       case 1001: return roomRowHouseLawn(progress)
-      case 1002: return roomMeadow(progress)
-      case 1003: return roomBackYard(progress)
-      case 1004: return roomOutsideTheForest(progress)
-      case 1005: return roomForestOutskirts(progress)
+      case 1002: return roomBackYard(progress)
+      case 1003: return roomMeadow(progress)
+      case 1010: return roomOutsideTheForest(progress)
+      case 1011: return roomForestOutskirts(progress)
     }
     return roomOops()
   });
