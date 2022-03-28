@@ -35,6 +35,29 @@ function windy(progress: GameProgress): null | GameAction {
   return null
 }
 
+function mobGaolBeak(): BattleMobInput {
+  return {
+    name: `Gaol Beak`,
+    exp: 10,
+    base: {
+      hp: 23,
+      mp: 0,
+      pp: 0,
+      off: 11,
+      def: 7,
+      psy: 2,
+      dmgphy: 2,
+      dmgele: 0,
+      dmgmys: 0,
+      dmgpsy: 0,
+      resphy: 3,
+      resele: 0,
+      resmys: 0,
+      respsy: 0,
+    },
+  }
+}
+
 function mobBushTail(): BattleMobInput {
   return {
     name: `Bush Tail`,
@@ -121,6 +144,48 @@ function mobBoreMite(): BattleMobInput {
   }
 }
 
+function battleMeadow(): void | GameAction {
+  if (rollRatio() <= 0.02) {
+    return {
+      battle: {
+        mobs: [mobBushTail(), mobBushTail()],
+      }
+    }
+  } else if (rollRatio() <= 0.20) {
+    return {
+      battle: {
+        mobs: [mobBushTail()],
+      }
+    }
+  }
+}
+
+function battleHillRoad(): void | GameAction {
+  if (rollRatio() <= 0.005) {
+    return {
+      battle: {
+        mobs: [mobGaolBeak(), mobGaolBeak(), mobBushTail()],
+      }
+    }
+  } else if (rollRatio() <= 0.02) {
+    return {
+      battle: {
+        mobs: [mobGaolBeak(), mobGaolBeak()],
+      }
+    }
+  } else if (rollRatio() <= 0.20) {
+    return {
+      battle: {
+        mobs: [mobGaolBeak()],
+      }
+    }
+  }
+}
+
+function battleForest(): void | GameAction {
+  // TODO
+}
+
 function makeSampleBattle(): BattleTemplate {
   return {
     mobs: [
@@ -147,7 +212,7 @@ function makePickupItem(item: Item, variable: string, progress: GameProgress): A
 }
 
 function roomOops(): Room {
-  const room = {
+  const room: Room = {
     description: `You are in a vast, dark emptiness. In front of you is a white light.`,
     things: [
       {
@@ -165,7 +230,7 @@ function roomOops(): Room {
 }
 
 function roomInRowHouse(progress: GameProgress): Room {
-  const room = {
+  const room: Room = {
     description: `You are in dimly lit, permanent room built from rough-hewn, dark planks that let
       in only tendrils of light and moist air from the outdoors. A bed, some racks, and drawers
       line the walls. A thatch door is on the narrow wall. On the other narrow wall, a thin window
@@ -229,6 +294,7 @@ function roomInRowHouse(progress: GameProgress): Room {
       ...(
         progress.get('$bed_made') ? makePickupItem(itemWindBandana, '$bandana_got', progress) : []
       ),
+      // TODO: Remove this debug battle.
       {
         name: `DEBUG`,
         lookAt: `It's a DEBUG protruding into this universe. You might be able to get a closer look.`,
@@ -246,7 +312,7 @@ function roomInRowHouse(progress: GameProgress): Room {
 }
 
 function roomRowHouseLawn(progress: GameProgress): Room {
-  const room = {
+  const room: Room = {
     description: `You are on a worn, sandy walkway stretching through the grassy plot, connecting
     a larger footpath and a series of faded wooden houses constructed in a row. The grass is short
     and worn from use. A meadow surrounds the lawn and reaches around to the rear of the houses.
@@ -274,6 +340,14 @@ function roomRowHouseLawn(progress: GameProgress): Room {
         exit: {
           goNarration: `You go around to the back of the houses.`,
           roomNo: 1002,
+        },
+      },
+      {
+        name: `Hill Road`,
+        lookAt: `The walkway leads away from the houses and yard, raising toward a pair of hills.`,
+        exit: {
+          goNarration: `You walk down the gently rising roadway.`,
+          roomNo: 1031,
         },
       },
       {
@@ -309,7 +383,7 @@ function roomRowHouseLawn(progress: GameProgress): Room {
 }
 
 function roomBackYard(progress: GameProgress): Room {
-  const room = {
+  const room: Room = {
     description: `You are behind the row of houses on a walkway leading to a latrine. Gentle undulations of
     wind bring a light odorous scent to your nose.`,
     things: [
@@ -358,7 +432,7 @@ function roomBackYard(progress: GameProgress): Room {
 }
 
 function roomMeadow(progress: GameProgress): Room {
-  const room = {
+  const room: Room = {
     description: `You are in a meadow of tall grass and wildflowers situated between the houses on the outskirts of town and a forest.
       The pathway is obvious, but not so worn down as to trample the grass completely.`,
     things: [
@@ -388,22 +462,14 @@ function roomMeadow(progress: GameProgress): Room {
       },
     ],
     tick: () => windy(progress),
-    battle: () => {
-      if (rollRatio() <= 0.20) {
-        return {
-          battle: {
-           mobs: [mobBushTail()],
-          }
-        }
-      }
-    },
+    battle: battleMeadow,
   }
 
   return room
 }
 
 function roomOutsideTheForest(progress: GameProgress): Room {
-  const room = {
+  const room: Room = {
     description: `You are surrounded by long, hissing grass and gently swaying flowers upon a lightly trodden path.
       In one direction lies more grass and in the other lies a forest whose tree tops are visible over the surrounding foliage.`,
     things: [
@@ -429,22 +495,14 @@ function roomOutsideTheForest(progress: GameProgress): Room {
       },
     ],
     tick: () => windy(progress),
-    battle: () => {
-      if (rollRatio() <= 0.20) {
-        return {
-          battle: {
-           mobs: [mobBushTail()],
-          }
-        }
-      }
-    },
+    battle: battleMeadow,
   }
 
   return room
 }
 
 function roomForestOutskirts(progress: GameProgress): Room {
-  const room = {
+  const room: Room = {
     description: `You are in the well-traveled space between thick shrubbery amidst the tall trees, draped in vinery, that define the forest's south-western face.`,
     things: [
       {
@@ -464,6 +522,107 @@ function roomForestOutskirts(progress: GameProgress): Room {
         lookAt: `Fibrous vines hang loosely, but firmly from the branches and sibling trunks of the trees here.`,
       },
     ],
+    battle: battleForest,
+  }
+
+  return room
+}
+
+function roomHillRoad(progress: GameProgress): Room {
+  const room: Room = {
+    description: `You are on a dirt road cut across the tops of a pair of gentle hills by years of foot traffic.
+      Wildflowers and an intimidating bramble grow beside the roadway.
+      The elevation provides you with a good vantage point to observe the surrounding land.`,
+    things: [
+      {
+        name: `Butterflies`,
+        lookAt: `Butterflies use slow wing flaps to float effortlessly between the flowers which are surrounded by thorny bushes.`,
+        isHereDescription: `Butterflies are busy inspecting the flowers here.`,
+      },
+      {
+        name: `Cliffs`,
+        lookAt: `You see the sheer rock face towering above everything natural and unnatural, far off, in all directions around you.`,
+      },
+      {
+        name: `Forest`,
+        lookAt: `A blanketing thicket of trees abuts against the cliffs and stands next to a grassy meadow far off.`,
+      },
+      {
+        name: `Lake`,
+        lookAt: `A still lake lies in the distance near the cliff face. A river is connected to it and which runs near town.`,
+      },
+      {
+        name: `Houses`,
+        lookAt: `There is a row of small structures down the other side of the hills next to a grassy meadow.`,
+        exit: {
+          roomNo: 1001,
+          goNarration: `You go along the declining road.`,
+        },
+      },
+      {
+        name: `Town`,
+        lookAt: `The road continues over a bridge and toward some large structures some ways down the hill. The structures lie spaced
+          out on either side of a roadway that leads to a large open area. The area is decorated with stones in the shape of the
+          wind, water and fire crests which are clearly visible from this distance.`,
+        exit: {
+          roomNo: 1032,
+          goNarration: `You go along the road toward town.`,
+        },
+      },
+      {
+        name: `Fields`,
+        lookAt: `Green topped plots of land lie just outside of town. Irrigation ditches guide water from a small lake into
+          the furrows.`,
+      },
+    ],
+    battle: battleHillRoad,
+  }
+
+  return room
+}
+
+function roomBridgeOutsideOfTown(progress: GameProgress): Room {
+  const room: Room = {
+    description: `Bridge outside of town. Goes over the river.`,
+    things: [
+      {
+        name: `Hill Road`,
+        lookAt: ``,
+        exit: {
+          roomNo: 1031,
+          goNarration: `You go.`,
+        },
+      },
+      {
+        name: `Town`,
+        lookAt: ``,
+        exit: {
+          roomNo: 1033,
+          goNarration: `You go.`,
+        },
+      },
+      // TODO: Go under the bridge
+    ],
+    battle: battleHillRoad,
+  }
+
+  return room
+}
+
+function roomBehindTheHall(progress: GameProgress): Room {
+  const room: Room = {
+    description: `You are on the outskirts of town behind the largest structure, a gathering hall.`,
+    things: [
+      {
+        name: `Hill Road Bridge`,
+        lookAt: ``,
+        exit: {
+          roomNo: 1032,
+          goNarration: `You go.`,
+        },
+      },
+    ],
+    battle: battleHillRoad,
   }
 
   return room
@@ -476,8 +635,13 @@ export function init(world: World) {
       case 1001: return roomRowHouseLawn(progress)
       case 1002: return roomBackYard(progress)
       case 1003: return roomMeadow(progress)
+      // 1003 - 1009 for the meadow.
       case 1010: return roomOutsideTheForest(progress)
       case 1011: return roomForestOutskirts(progress)
+      // 1011 - 1030 for the forest.
+      case 1031: return roomHillRoad(progress)
+      case 1032: return roomBridgeOutsideOfTown(progress)
+      case 1033: return roomBehindTheHall(progress)
     }
     return roomOops()
   });
