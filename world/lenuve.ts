@@ -3,7 +3,7 @@ import { GameProgress, GameAction } from '../game.js'
 import { Item } from '../item.js'
 import { playerStatsInput } from '../player.js'
 import { rollRange, rollRatio } from '../roll.js'
-import { Room, RoomThing} from '../room.js'
+import { Room, RoomThing } from '../room.js'
 import { Scene } from '../scene.js'
 import { World } from '../world.js'
 
@@ -20,7 +20,7 @@ const itemWindBandana: Item = {
   }
 }
 
-function windy(progress: GameProgress): null | GameAction {
+function tickAmbiance(narration: string, progress: GameProgress): null | GameAction {
   let count = progress.get('ambiance') // ephemeral variable
   let max = progress.get('ambiance_max')
   if (max == 0) {
@@ -30,11 +30,16 @@ function windy(progress: GameProgress): null | GameAction {
   if (count >= max) {
     progress.set('ambiance', 0)
     progress.set('ambiance_max', rollRange(75, 250))
-    return { narration: `The wind blows gently around you.` }
+    return { narration }
   }
   return null
 }
 
+function windy(progress: GameProgress) {
+  return tickAmbiance(`The wind blows gently around you.`, progress)
+}
+
+// The beak has interlocking teeth.
 function mobGaolBeak(): BattleMobInput {
   return {
     name: `Gaol Beak`,
@@ -55,6 +60,24 @@ function mobGaolBeak(): BattleMobInput {
       resmys: 0,
       respsy: 0,
     },
+    decide: (mob, battle, oldActionDone) => {
+      if (!oldActionDone) {
+        return null
+      }
+      const r = rollRatio()
+      if (r < 0.10) {
+        return {
+          attackCountdown: 12,
+          initialNarration: `${ mob.name } puffs its chest and spreads its wings.`,
+        }
+      } else if (r < 0.20) {
+        return {
+          attackCountdown: 6,
+          initialNarration: `${ mob.name } buzzes by your head.`,
+        }
+      }
+      return null
+    }
   }
 }
 
@@ -581,27 +604,44 @@ function roomHillRoad(progress: GameProgress): Room {
   return room
 }
 
-function roomBridgeOutsideOfTown(progress: GameProgress): Room {
+const hillBridgeDescription = `It's a bridge over the river. An assortment of large gray and orange stones define the bridge's exterior
+  while smaller stones and a thick mortar fill the interior and have formed a seal over the structures faces. Large
+  holes let the shallow water flow freely through the lower parts collecting algae and moss.`
+
+function roomHillRoadBridge(progress: GameProgress): Room {
   const room: Room = {
-    description: `Bridge outside of town. Goes over the river.`,
+    description: `You are on one side of a stone bridge crossing the thin part of a river running through the countryside.
+      The grass is long and untamed in the surrounding area, but there is a clearly traveled path next to the stonework
+      leading to the water below.`,
     things: [
       {
         name: `Hill Road`,
-        lookAt: ``,
+        lookAt: `The road extend toward a pair of hills as the ground it traverses gently rises.`,
         exit: {
           roomNo: 1031,
-          goNarration: `You go.`,
+          goNarration: `You go along the road toward the hills.`,
         },
       },
       {
         name: `Town`,
-        lookAt: ``,
+        lookAt: `Several large and quite a few small structures of various design can be see a little way off. `,
         exit: {
-          roomNo: 1033,
-          goNarration: `You go.`,
+          roomNo: 1035,
+          goNarration: `You go across the bridge and down the road toward town.`,
         },
       },
-      // TODO: Go under the bridge
+      {
+        name: `Bridge`,
+        lookAt: hillBridgeDescription,
+      },
+      {
+        name: `River`,
+        lookAt: `The dark water under the bridge looks still. A path leads down from the side of the bridge, closer to the water.`,
+        exit: {
+          roomNo: 1033,
+          goNarration: `You climb down the narrow path beside the bridge to the water below.`,
+        },
+      },
     ],
     battle: battleHillRoad,
   }
@@ -609,16 +649,118 @@ function roomBridgeOutsideOfTown(progress: GameProgress): Room {
   return room
 }
 
-function roomBehindTheHall(progress: GameProgress): Room {
+function roomHillRoadBridgeUnder(progress: GameProgress): Room {
   const room: Room = {
-    description: `You are on the outskirts of town behind the largest structure, a gathering hall.`,
+    description: `You are near the side of a stone bridge crossing the water here. The banks are narrow and slippery from
+      the persistent wetness. Impenetrable foliage shepherds you close to the water.`,
     things: [
       {
-        name: `Hill Road Bridge`,
-        lookAt: ``,
+        name: `Bridge`,
+        lookAt: hillBridgeDescription + ` A path leads up, away from the water.`,
         exit: {
           roomNo: 1032,
-          goNarration: `You go.`,
+          goNarration: `You climb up the path.`,
+        },
+      },
+      {
+        name: `Water`,
+        lookAt: `The water looks still, but the gentle sound it makes on the banks and rocks lets you know it's flowing.
+          The water is dark from the black clay and sand mixture lining the bottom.`,
+        use: () => {
+          // I thought about limiting the number of times you can try to skip rocks, so the value is
+          // gotten here instead of closer to where it it updated below.
+          const times = progress.get('$hillbridge_stones_skipped')
+          let skips = 0
+          let saying = ''
+          const r = rollRatio()
+          if (r < 0.02) {
+            skips = 0
+            saying = 'The stone flies straight down into your foot. Yeow!'
+          } else if (r < 0.1) {
+            skips = 0
+            saying = 'The stone flies straight down into the mud.'
+          } else if (r < 0.25) {
+            skips = 0
+            saying = 'Blub. The stone sinks.'
+          } else if (r < 0.35) {
+            skips = 1
+            saying = 'The stone skips once before sinking.'
+          } else if (r < 0.75) {
+            skips = 2
+            saying = 'The stone skips twice before sinking.'
+          } else if (r < 0.95) {
+            skips = 3
+            saying = 'The stone skitters three times atop the water.'
+          } else if (r < 0.995) {
+            skips = 4
+            saying = 'The stone makes four skips across the surface before sinking near the opposite bank.'
+          } else {
+            skips = 5
+            saying = 'The stone splashes five times along the surface until it smacks into the opposite bank with a thud.'
+          }
+          progress.set('$hillbridge_max_skips', Math.max(progress.get('$hillbridge_max_skips'), skips))
+          progress.set('$hillbridge_stones_skipped', times + 1)
+          return {
+            narration: `You pick up a flat looking stone and throw it at the water. ${ saying }`
+          }
+        },
+      },
+      {
+        name: `Foliage`,
+        lookAt: `A tangle of vines, shrubs, and thorny plants fills any space that might be found between the stout trees
+          that grow in this soft, wet soil.`,
+      },
+      {
+        name: `Banks`,
+        lookAt: `The slippery banks extend further down stream surrounded on one side by the water and on the other
+          dense foliage.`,
+        exit: {
+          roomNo: 1034,
+          goNarration: `You go along the water's edge.`,
+        },
+      },
+    ],
+    battle: battleHillRoad,
+  }
+
+  return room
+}
+
+function roomHillRoadBridgeUnderDownRiver(progress: GameProgress): Room {
+  const room: Room = {
+    description: `You are surrounded by a thick bramble on one side and the river on the other.
+      The banks are overtaken by foliage further down stream.
+      You see hints of a bridge through the greenery up stream.`,
+    things: [
+      {
+        name: `Bridge`,
+        lookAt: `You see bits of unnatural gray and orange through the morphing mesh of leaves and branches
+          manipulated by the wind.`,
+        exit: {
+          roomNo: 1033,
+          goNarration: `You go along the water's edge.`,
+        },
+      },
+    ],
+    // no battles, this is a safe place.
+    tick: () => tickAmbiance(`You hear the water trickle.`, progress),
+  }
+
+  return room
+}
+
+function roomBehindTheHall(progress: GameProgress): Room {
+  const room: Room = {
+    description: `You are on the outskirts of town behind the largest structure used as a gathering place.
+      A road starts here and leads out to the countryside.`,
+    things: [
+      {
+        name: `Hill Road`,
+        lookAt: `A road leads out of town through the lush countryside. You cannot see the turns in the road around
+          here, but you see it on its way across a pair of hills some way off.`,
+        exit: {
+          roomNo: 1032,
+          goNarration: `You go along the road out of town to a bridge.`,
         },
       },
     ],
@@ -640,8 +782,10 @@ export function init(world: World) {
       case 1011: return roomForestOutskirts(progress)
       // 1011 - 1030 for the forest.
       case 1031: return roomHillRoad(progress)
-      case 1032: return roomBridgeOutsideOfTown(progress)
-      case 1033: return roomBehindTheHall(progress)
+      case 1032: return roomHillRoadBridge(progress)
+      case 1033: return roomHillRoadBridgeUnder(progress)
+      case 1034: return roomHillRoadBridgeUnderDownRiver(progress)
+      case 1035: return roomBehindTheHall(progress)
     }
     return roomOops()
   });
