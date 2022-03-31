@@ -667,41 +667,45 @@ function roomHillRoadBridgeUnder(progress: GameProgress): Room {
         lookAt: `The water looks still, but the gentle sound it makes on the banks and rocks lets you know it's flowing.
           The water is dark from the black clay and sand mixture lining the bottom.`,
         use: () => {
-          // I thought about limiting the number of times you can try to skip rocks, so the value is
-          // gotten here instead of closer to where it it updated below.
           const times = progress.get('$hillbridge_stones_skipped')
-          let skips = 0
-          let saying = ''
-          const r = rollRatio()
-          if (r < 0.02) {
-            skips = 0
-            saying = 'The stone flies straight down into your foot. Yeow!'
-          } else if (r < 0.1) {
-            skips = 0
-            saying = 'The stone flies straight down into the mud.'
-          } else if (r < 0.25) {
-            skips = 0
-            saying = 'Blub. The stone sinks.'
-          } else if (r < 0.35) {
-            skips = 1
-            saying = 'The stone skips once before sinking.'
-          } else if (r < 0.75) {
-            skips = 2
-            saying = 'The stone skips twice before sinking.'
-          } else if (r < 0.95) {
-            skips = 3
-            saying = 'The stone skitters three times atop the water.'
-          } else if (r < 0.995) {
-            skips = 4
-            saying = 'The stone makes four skips across the surface before sinking near the opposite bank.'
+          if (times >= 16) {
+            return {
+              narration: `You search for a flat looking stone, but don't find any.`,
+            }
           } else {
-            skips = 5
-            saying = 'The stone splashes five times along the surface until it smacks into the opposite bank with a thud.'
-          }
-          progress.set('$hillbridge_max_skips', Math.max(progress.get('$hillbridge_max_skips'), skips))
-          progress.set('$hillbridge_stones_skipped', times + 1)
-          return {
-            narration: `You pick up a flat looking stone and throw it at the water. ${ saying }`
+            let skips = 0
+            let saying = ''
+            const r = rollRatio()
+            if (r < 0.02) {
+              skips = 0
+              saying = 'The stone flies straight down into your foot. Yeow!'
+            } else if (r < 0.1) {
+              skips = 0
+              saying = 'The stone flies straight down into the mud.'
+            } else if (r < 0.25) {
+              skips = 0
+              saying = 'Blub. The stone sinks.'
+            } else if (r < 0.35) {
+              skips = 1
+              saying = 'The stone skips once before sinking.'
+            } else if (r < 0.75) {
+              skips = 2
+              saying = 'The stone skips twice before sinking.'
+            } else if (r < 0.95) {
+              skips = 3
+              saying = 'The stone skitters three times atop the water.'
+            } else if (r < 0.995) {
+              skips = 4
+              saying = 'The stone makes four skips across the surface before sinking near the opposite bank.'
+            } else {
+              skips = 5
+              saying = 'The stone splashes five times along the surface until it smacks into the opposite bank with a thud.'
+            }
+            progress.set('$hillbridge_max_skips', Math.max(progress.get('$hillbridge_max_skips'), skips))
+            progress.set('$hillbridge_stones_skipped', times + 1)
+            return {
+              narration: `You pick up a flat looking stone and throw it at the water. ${ saying }`,
+            }
           }
         },
       },
