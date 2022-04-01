@@ -629,6 +629,10 @@ export class Game {
         this.doGameAction(action)
       }
     }
+    if (room.healing != null && room.healing) {
+      this.player.resources.hp = Math.min(this.player.hp, this.player.resources.hp + 1)
+      this.updateResources()
+    }
   }
 
   doStateBattle() {

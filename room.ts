@@ -5,6 +5,7 @@ export interface Room {
   things: Array<RoomThing>,
   tick?: () => void | undefined | null | GameAction,
   battle?: () => void | undefined | null | GameAction,
+  healing?: boolean,
 }
 
 export interface RoomThing {

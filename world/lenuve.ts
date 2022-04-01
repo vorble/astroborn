@@ -258,6 +258,7 @@ function roomInRowHouse(progress: GameProgress): Room {
       in only tendrils of light and moist air from the outdoors. A bed, some racks, and drawers
       line the walls. A thatch door is on the narrow wall. On the other narrow wall, a thin window
       lets in a ray of sunlight, illuminating the dust in the dank smelling air.`,
+    healing: true,
     things: [
       {
         name: `Thatch Door`,
@@ -746,6 +747,7 @@ function roomHillRoadBridgeUnderDownRiver(progress: GameProgress): Room {
         },
       },
     ],
+    healing: true,
     // no battles, this is a safe place.
     tick: () => tickAmbiance(`You hear the water trickle.`, progress),
   }
