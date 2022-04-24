@@ -205,8 +205,38 @@ function battleHillRoad(): void | GameAction {
   }
 }
 
+function battleFields(): void | GameAction {
+  // TODO: I'd like a different kind of enemy here.
+  if (rollRatio() <= 0.02) {
+    return {
+      battle: {
+        mobs: [mobGaolBeak(), mobGaolBeak(), mobBushTail()],
+      }
+    }
+  } else if (rollRatio() <= 0.20) {
+    return {
+      battle: {
+        mobs: [mobGaolBeak(), mobGaolBeak()],
+      }
+    }
+  }
+}
+
 function battleForest(): void | GameAction {
-  // TODO
+  // TODO: I'd like a different kind of enemy here.
+  if (rollRatio() <= 0.02) {
+    return {
+      battle: {
+        mobs: [mobGaolBeak(), mobGaolBeak(), mobBushTail()],
+      }
+    }
+  } else if (rollRatio() <= 0.20) {
+    return {
+      battle: {
+        mobs: [mobGaolBeak(), mobGaolBeak()],
+      }
+    }
+  }
 }
 
 function makeSampleBattle(): BattleTemplate {
@@ -355,7 +385,7 @@ function roomRowHouseLawn(progress: GameProgress): Room {
         lookAt: `Worn grass gives way to a meadow leading toward the forest.`,
         exit: {
           goNarration: `You go across the lawn and start to push your way through the tall grass.`,
-          roomNo: 1003,
+          roomNo: 1005,
         },
       },
       {
@@ -371,7 +401,7 @@ function roomRowHouseLawn(progress: GameProgress): Room {
         lookAt: `The walkway leads away from the houses and yard, raising toward a pair of hills.`,
         exit: {
           goNarration: `You walk down the gently rising roadway.`,
-          roomNo: 1031,
+          roomNo: 1030,
         },
       },
       {
@@ -389,7 +419,7 @@ function roomRowHouseLawn(progress: GameProgress): Room {
               return {
                 scene: new Scene([
                   `You ask about what's so funny. Greg replies with a smile,
-                    "Maun was telling me the gopher he saw cutting wood yesterday."`,
+                    "Maun was telling me about the gopher he saw cutting wood yesterday."`,
                   `Maun interjects, "Looking at me like this:" He tilts his head and
                     exposes his front teeth, raising his left eyebrow.`,
                   `Greg and Maun continue their playful banter and make other animalistic
@@ -473,7 +503,7 @@ function roomMeadow(progress: GameProgress): Room {
         lookAt: `The pathway continues toward the forest.`,
         exit: {
           goNarration: `You push through the tall grass toward the forest.`,
-          roomNo: 1010,
+          roomNo: 1009,
         },
       },
       {
@@ -502,7 +532,7 @@ function roomOutsideTheForest(progress: GameProgress): Room {
         lookAt: `Tall grass is lightly trodden to guide you along a pathway.`,
         exit: {
           goNarration: `You push forward through the grass.`,
-          roomNo: 1003,
+          roomNo: 1005,
         },
       },
       {
@@ -514,7 +544,7 @@ function roomOutsideTheForest(progress: GameProgress): Room {
         lookAt: `Tall grass is lightly trodden to guide you along a pathway toward the forest.`,
         exit: {
           goNarration: `You push forward through the grass and shrubbery as you make your way toward the forest.`,
-          roomNo: 1011,
+          roomNo: 1010,
         },
       },
     ],
@@ -534,7 +564,7 @@ function roomForestOutskirts(progress: GameProgress): Room {
         lookAt: `Shrubbery gives way to a meadow of tall grass through the well-traveled exit from the forest.`,
         exit: {
           goNarration: `You go along the path and begin to push through taller and taller grass.`,
-          roomNo: 1010,
+          roomNo: 1009,
         },
       },
       {
@@ -589,7 +619,7 @@ function roomHillRoad(progress: GameProgress): Room {
           out on either side of a roadway that leads to a large open area. The area is decorated with stones in the shape of the
           wind, water and fire crests which are clearly visible from this distance.`,
         exit: {
-          roomNo: 1032,
+          roomNo: 1031,
           goNarration: `You go along the road toward town.`,
         },
       },
@@ -619,15 +649,15 @@ function roomHillRoadBridge(progress: GameProgress): Room {
         name: `Hill Road`,
         lookAt: `The road extend toward a pair of hills as the ground it traverses gently rises.`,
         exit: {
-          roomNo: 1031,
+          roomNo: 1030,
           goNarration: `You go along the road toward the hills.`,
         },
       },
       {
         name: `Town`,
-        lookAt: `Several large and quite a few small structures of various design can be see a little way off. `,
+        lookAt: `Several large and quite a few small structures and tents of various design can be see a little way off. `,
         exit: {
-          roomNo: 1035,
+          roomNo: 1050,
           goNarration: `You go across the bridge and down the road toward town.`,
         },
       },
@@ -639,7 +669,7 @@ function roomHillRoadBridge(progress: GameProgress): Room {
         name: `River`,
         lookAt: `The dark water under the bridge looks still. A path leads down from the side of the bridge, closer to the water.`,
         exit: {
-          roomNo: 1033,
+          roomNo: 1032,
           goNarration: `You climb down the narrow path beside the bridge to the water below.`,
         },
       },
@@ -659,7 +689,7 @@ function roomHillRoadBridgeUnder(progress: GameProgress): Room {
         name: `Bridge`,
         lookAt: hillBridgeDescription + ` A path leads up, away from the water.`,
         exit: {
-          roomNo: 1032,
+          roomNo: 1031,
           goNarration: `You climb up the path.`,
         },
       },
@@ -720,7 +750,7 @@ function roomHillRoadBridgeUnder(progress: GameProgress): Room {
         lookAt: `The slippery banks extend further down stream surrounded on one side by the water and on the other
           dense foliage.`,
         exit: {
-          roomNo: 1034,
+          roomNo: 1033,
           goNarration: `You go along the water's edge.`,
         },
       },
@@ -742,8 +772,8 @@ function roomHillRoadBridgeUnderDownRiver(progress: GameProgress): Room {
         lookAt: `You see bits of unnatural gray and orange through the morphing mesh of leaves and branches
           manipulated by the wind.`,
         exit: {
-          roomNo: 1033,
-          goNarration: `You go along the water's edge.`,
+          roomNo: 1032,
+          goNarration: `You go back along the water's edge.`,
         },
       },
     ],
@@ -757,20 +787,55 @@ function roomHillRoadBridgeUnderDownRiver(progress: GameProgress): Room {
 
 function roomBehindTheHall(progress: GameProgress): Room {
   const room: Room = {
-    description: `You are on the outskirts of town behind the largest structure used as a gathering place.
-      A road starts here and leads out to the countryside.`,
+    description: `You are on the outskirts of town behind the largest structure, which is used as a gathering hall.
+      Past the hall, the land gives way to open fields and a rows of plants further out.
+      Around the building wraps a foot path, opening the way to more of the town.
+      A road begins here and leads out to the countryside.`,
     things: [
+      // TODO: Exit into town
       {
         name: `Hill Road`,
         lookAt: `A road leads out of town through the lush countryside. You cannot see the turns in the road around
           here, but you see it on its way across a pair of hills some way off.`,
         exit: {
-          roomNo: 1032,
+          roomNo: 1031,
           goNarration: `You go along the road out of town to a bridge.`,
         },
       },
+      {
+        name: `Fields`,
+        lookAt: `Barely visible from here are rows of plants in the soil in a series of rectangular plots.`,
+        exit: {
+          roomNo: 1040,
+          goNarration: `You go off the road and head away from town, toward the fields.`,
+        },
+      },
     ],
-    battle: battleHillRoad,
+  }
+
+  return room
+}
+
+function roomFieldsAreaWest(progress: GameProgress): Room {
+  const room: Room = {
+    description: `You are in the short grass outside of town near the western edge of the farm fields.
+      Each field appears to host a different crop, some taller or greener than the others.`,
+    things: [
+      {
+        name: `Town`,
+        lookAt: `The broad details of town are painted on the horizon, greyed in a haze from the distance and the moisture in the air.`,
+        exit: {
+          roomNo: 1050,
+          goNarration: `You go toward town.`,
+        },
+      },
+      {
+        name: `Fields`,
+        lookAt: `There are rows of a small, green, bushy plants in the near plots. Beyond, there is a bare plot and another with taller plants.`,
+        // TODO: Go into the field.
+      },
+    ],
+    battle: battleFields,
   }
 
   return room
@@ -779,19 +844,29 @@ function roomBehindTheHall(progress: GameProgress): Room {
 export function init(world: World) {
   world.registerZone(1, (progress, roomNo) => {
     switch (roomNo) {
+      // 1000 - 1004 for the houses.
       case 1000: return roomInRowHouse(progress)
       case 1001: return roomRowHouseLawn(progress)
       case 1002: return roomBackYard(progress)
-      case 1003: return roomMeadow(progress)
-      // 1003 - 1009 for the meadow.
-      case 1010: return roomOutsideTheForest(progress)
-      case 1011: return roomForestOutskirts(progress)
-      // 1011 - 1030 for the forest.
-      case 1031: return roomHillRoad(progress)
-      case 1032: return roomHillRoadBridge(progress)
-      case 1033: return roomHillRoadBridgeUnder(progress)
-      case 1034: return roomHillRoadBridgeUnderDownRiver(progress)
-      case 1035: return roomBehindTheHall(progress)
+
+      // 1005 - 1009 for the meadow.
+      case 1005: return roomMeadow(progress)
+      case 1009: return roomOutsideTheForest(progress)
+
+      // 1010 - 1029 for the forest.
+      case 1010: return roomForestOutskirts(progress)
+
+      // 1030 - 1039 for hill road.
+      case 1030: return roomHillRoad(progress)
+      case 1031: return roomHillRoadBridge(progress)
+      case 1032: return roomHillRoadBridgeUnder(progress)
+      case 1033: return roomHillRoadBridgeUnderDownRiver(progress)
+
+      // 1040 - 1049 for the fields.
+      case 1040: return roomFieldsAreaWest(progress)
+
+      // 1050 - 1079 for town.
+      case 1050: return roomBehindTheHall(progress)
     }
     return roomOops()
   });
