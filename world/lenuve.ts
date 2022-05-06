@@ -832,10 +832,227 @@ function roomFieldsAreaWest(progress: GameProgress): Room {
       {
         name: `Fields`,
         lookAt: `There are rows of a small, green, bushy plants in the near plots. Beyond, there is a bare plot and another with taller plants.`,
-        // TODO: Go into the field.
+        exit: {
+          roomNo: 1041,
+          goNarration: `You go into the fields.`,
+        },
       },
     ],
     battle: battleFields,
+  }
+
+  return room
+}
+
+function roomFieldsSweetRoot(progress: GameProgress): Room {
+  const room: Room = {
+    description: `Sweet Root`,
+    things: [
+      {
+        name: `Out`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1040,
+          goNarration: ``, // TODO
+        },
+      },
+      {
+        name: `Bridge`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1045,
+          goNarration: ``, // TODO
+        },
+      },
+      {
+        name: `Ditch`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1046,
+          goNarration: ``, // TODO
+        },
+      },
+    ],
+    battle: battleFields,
+  }
+
+  return room
+}
+
+function roomFieldsPillowBean(progress: GameProgress): Room {
+  const room: Room = {
+    description: `You are far into the field, in the soft dirt of the furrow where lanky, dark green plants come up to your knees.
+      A sea of gently waving leafage extends in all directions around you.
+      You can barely see the hints of the structures comprising the town as a sliver on the horizon.`,
+    things: [
+      {
+        name: `Empty`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1044,
+          goNarration: ``, // TODO
+        },
+      },
+      {
+        name: `Bridge`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1045,
+          goNarration: ``, // TODO
+        },
+      },
+    ],
+    battle: battleFields,
+  }
+
+  return room
+}
+
+function roomFieldsWheat(progress: GameProgress): Room {
+  const room: Room = {
+    description: `Wheat`, // TODO
+    things: [
+      {
+        name: `Ditch`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1046,
+          goNarration: ``, // TODO
+        },
+      },
+      {
+        name: `Empty`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1044,
+          goNarration: ``, // TODO
+        },
+      },
+      {
+        name: `Run Up`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1047,
+          goNarration: ``, // TODO
+        },
+      },
+    ],
+    battle: battleFields,
+  }
+
+  return room
+}
+
+function roomFieldsEmpty(progress: GameProgress): Room {
+  const room: Room = {
+    description: `Empty`, // TODO
+    things: [
+      {
+        name: `Pillow Bean`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1042,
+          goNarration: ``, // TODO
+        },
+      },
+      {
+        name: `Wheat`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1043,
+          goNarration: ``, // TODO
+        },
+      },
+      {
+        name: `Run Up`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1047,
+          goNarration: ``, // TODO
+        },
+      },
+    ],
+    battle: battleFields,
+  }
+
+  return room
+}
+
+function roomFieldsBridge(progress: GameProgress): Room {
+  const room: Room = {
+    description: `Bridge`, // TODO
+    things: [
+      {
+        name: `Sweet Root`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1041,
+          goNarration: ``, // TODO
+        },
+      },
+      {
+        name: `Pillow Bean`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1042,
+          goNarration: ``, // TODO
+        },
+      },
+    ],
+    battle: battleFields,
+  }
+
+  return room
+}
+
+function roomFieldsDitch(progress: GameProgress): Room {
+  const room: Room = {
+    description: `Ditch`, // TODO
+    things: [
+      {
+        name: `Sweet Root`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1041,
+          goNarration: ``, // TODO
+        },
+      },
+      {
+        name: `Wheat`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1043,
+          goNarration: ``, // TODO
+        },
+      },
+    ],
+    battle: battleFields,
+  }
+
+  return room
+}
+
+function roomFieldsRunUp(progress: GameProgress): Room {
+  const room: Room = {
+    description: `Run Up`, // TODO
+    things: [
+      {
+        name: `Wheat`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1043,
+          goNarration: ``, // TODO
+        },
+      },
+      {
+        name: `Empty`, // TODO
+        lookAt: ``, // TODO
+        exit: {
+          roomNo: 1044,
+          goNarration: ``, // TODO
+        },
+      },
+    ],
   }
 
   return room
@@ -863,7 +1080,14 @@ export function init(world: World) {
       case 1033: return roomHillRoadBridgeUnderDownRiver(progress)
 
       // 1040 - 1049 for the fields.
-      case 1040: return roomFieldsAreaWest(progress)
+      case 1040: return roomFieldsAreaWest(progress)     //     2 - - - 4
+      case 1041: return roomFieldsSweetRoot(progress)    //     |       | \
+      case 1042: return roomFieldsPillowBean(progress)   //     5       |  7
+      case 1043: return roomFieldsWheat(progress)        //     |       | /
+      case 1044: return roomFieldsEmpty(progress)        // 0 - 1 - 6 - 3
+      case 1045: return roomFieldsBridge(progress)
+      case 1046: return roomFieldsDitch(progress)
+      case 1047: return roomFieldsRunUp(progress)
 
       // 1050 - 1079 for town.
       case 1050: return roomBehindTheHall(progress)
