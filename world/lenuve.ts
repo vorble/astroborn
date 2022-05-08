@@ -2,7 +2,7 @@ import { BattleTemplate, BattleMobInput } from '../battle.js'
 import { GameProgress, GameAction } from '../game.js'
 import { Item } from '../item.js'
 import { playerStatsInput } from '../player.js'
-import { rollRange, rollRatio } from '../roll.js'
+import { rollRange, rollRatio, rollChoice } from '../roll.js'
 import { Room, RoomThing } from '../room.js'
 import { Scene } from '../scene.js'
 import { World } from '../world.js'
@@ -20,11 +20,18 @@ const itemWindBandana: Item = {
   }
 }
 
-function tickAmbiance(narration: string, progress: GameProgress): null | GameAction {
+// minWaitFirst was added so a really low first message time can occur in the fields.
+function tickAmbiance(narration: string, progress: GameProgress, minWaitFirst?: number, maxWaitFirst?: number): null | GameAction {
   let count = progress.get('ambiance') // ephemeral variable
   let max = progress.get('ambiance_max')
+  if (minWaitFirst == null) {
+    minWaitFirst = 75;
+  }
+  if (maxWaitFirst == null) {
+    maxWaitFirst = 250;
+  }
   if (max == 0) {
-    progress.set('ambiance_max', max = rollRange(75, 250))
+    progress.set('ambiance_max', max = rollRange(minWaitFirst, maxWaitFirst))
   }
   progress.set('ambiance', count = count + 1)
   if (count >= max) {
@@ -37,6 +44,15 @@ function tickAmbiance(narration: string, progress: GameProgress): null | GameAct
 
 function windy(progress: GameProgress) {
   return tickAmbiance(`The wind blows gently around you.`, progress)
+}
+
+function tickAmbianceFields(progress: GameProgress) {
+  const saying = rollChoice([
+    `The sun bears down upon you.`,
+    `A cicada buzzes.`,
+    `The stillness of the air makes it difficult to breath.`,
+  ]);
+  return tickAmbiance(saying, progress, 5, 10)
 }
 
 // The beak has interlocking teeth.
@@ -831,10 +847,10 @@ function roomFieldsAreaWest(progress: GameProgress): Room {
       },
       {
         name: `Fields`,
-        lookAt: `There are rows of a small, green, bushy plants in the near plots. Beyond, there is a bare plot and another with taller plants.`,
+        lookAt: `There are rows of a small, green, leafy plants in the near plots. Beyond, there is a bare plot and another with taller plants.`,
         exit: {
           roomNo: 1041,
-          goNarration: `You go into the fields.`,
+          goNarration: `You go into the fields and through several rows of plants.`,
         },
       },
     ],
@@ -846,33 +862,37 @@ function roomFieldsAreaWest(progress: GameProgress): Room {
 
 function roomFieldsSweetRoot(progress: GameProgress): Room {
   const room: Room = {
-    description: `Sweet Root`,
+    description: `You are among the rows of sweet root plants, their leafy tops not quite brushing against your legs as you move about.
+      The sea of green stretches far, catching the sun.
+      The air is still and hot, the distant plant tops shimmering and dancing in the swelter.`,
     things: [
+      // TODO: Look at the plants more closely.
       {
-        name: `Out`, // TODO
-        lookAt: ``, // TODO
+        name: `Fields Area`,
+        lookAt: `Past the rows of vegetables, a grassy area is separated from the fields.`,
         exit: {
           roomNo: 1040,
-          goNarration: ``, // TODO
+          goNarration: `You go through the rows and out of the field.`,
         },
       },
       {
-        name: `Bridge`, // TODO
-        lookAt: ``, // TODO
+        name: `Bridge`,
+        lookAt: `There is a bridge on the other side of the field, to the end of the rows.`,
         exit: {
           roomNo: 1045,
-          goNarration: ``, // TODO
+          goNarration: `You go along the row of plants.`,
         },
       },
       {
-        name: `Ditch`, // TODO
-        lookAt: ``, // TODO
+        name: `Irrigation Ditch`,
+        lookAt: `Situated between this field and another is an irrigation ditch.`,
         exit: {
           roomNo: 1046,
-          goNarration: ``, // TODO
+          goNarration: `You go through the rows of plants.`,
         },
       },
     ],
+    tick: () => tickAmbianceFields(progress),
     battle: battleFields,
   }
 
@@ -885,23 +905,27 @@ function roomFieldsPillowBean(progress: GameProgress): Room {
       A sea of gently waving leafage extends in all directions around you.
       You can barely see the hints of the structures comprising the town as a sliver on the horizon.`,
     things: [
+      // TODO: Look at the beans more closely. Pick some beans? Can I make them grow back over time while you're away?
+      // TODO: If every room had a tick function, that might work (since there's no zone-specific callbacks).
+      // TODO: One might be injected in the main room lookup function.
       {
-        name: `Empty`, // TODO
-        lookAt: ``, // TODO
+        name: `Empty`,
+        lookAt: `Bare soil with spotted wild growth lies on the other side of the field.`,
         exit: {
           roomNo: 1044,
-          goNarration: ``, // TODO
+          goNarration: `You carefully pass through the beans to avoid damaging them.`,
         },
       },
       {
-        name: `Bridge`, // TODO
-        lookAt: ``, // TODO
+        name: `Bridge`,
+        lookAt: `There is a bridge barely visible beyond the rows of beans.`,
         exit: {
           roomNo: 1045,
-          goNarration: ``, // TODO
+          goNarration: `You carefully pass through the beans to avoid damaging them.`,
         },
       },
     ],
+    tick: () => tickAmbianceFields(progress),
     battle: battleFields,
   }
 
@@ -910,7 +934,8 @@ function roomFieldsPillowBean(progress: GameProgress): Room {
 
 function roomFieldsWheat(progress: GameProgress): Room {
   const room: Room = {
-    description: `Wheat`, // TODO
+    description: `You are in a worn trail through a field of green wheat, smooth to the touch,
+      which is reaching up to your mid section.`,
     things: [
       {
         name: `Ditch`, // TODO
@@ -937,6 +962,7 @@ function roomFieldsWheat(progress: GameProgress): Room {
         },
       },
     ],
+    tick: () => tickAmbianceFields(progress),
     battle: battleFields,
   }
 
@@ -972,6 +998,7 @@ function roomFieldsEmpty(progress: GameProgress): Room {
         },
       },
     ],
+    tick: () => tickAmbianceFields(progress),
     battle: battleFields,
   }
 
@@ -999,6 +1026,7 @@ function roomFieldsBridge(progress: GameProgress): Room {
         },
       },
     ],
+    tick: () => tickAmbianceFields(progress),
     battle: battleFields,
   }
 
@@ -1026,6 +1054,7 @@ function roomFieldsDitch(progress: GameProgress): Room {
         },
       },
     ],
+    tick: () => tickAmbianceFields(progress),
     battle: battleFields,
   }
 

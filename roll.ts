@@ -22,3 +22,9 @@ export function rollRatio(): number {
 export function rollUniform(min: number, max: number): number {
   return min + rollRatio() * (max - min)
 }
+
+// Chooses one item from the given array of items with equal probability.
+export function rollChoice<T>(items: Array<T>): T {
+  const index = rollInt(items.length)
+  return items[index]
+}
