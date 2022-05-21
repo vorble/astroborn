@@ -846,7 +846,7 @@ function roomFieldsAreaWest(progress: GameProgress): Room {
         },
       },
       {
-        name: `Fields`,
+        name: `Fields`, // TODO: should this say the kind of field it is? Make it consistent with what's in the rest of the fields.
         lookAt: `There are rows of a small, green, leafy plants in the near plots. Beyond, there is a bare plot and another with taller plants.`,
         exit: {
           roomNo: 1041,
@@ -1007,8 +1007,12 @@ function roomFieldsEmpty(progress: GameProgress): Room {
 
 function roomFieldsBridge(progress: GameProgress): Room {
   const room: Room = {
-    description: `Bridge`, // TODO
+    description: `You are on a sturdy bridge made from long planks of sun greyed wood.
+      A still ditch filled with still, dark water sits underneath.
+      On either end of the bridge is the start of a farm field.`,
     things: [
+      // TODO: Look at ditch/water
+      // TOOD: Look at bridge itself. It's in good repair, some planks have been replaced and are less faded.
       {
         name: `Sweet Root`, // TODO
         lookAt: ``, // TODO
