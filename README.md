@@ -2,7 +2,7 @@
 
 Reach for the stars in this open-world text adventure.
 
-**NOTE** This game does not currently offer a playable experience.
+**NOTE** This game does not currently offer a playable experience, but you can try it out on your mobile device [here](https://vorble.github.io/astroborn/index.html).
 
 ## Developers
 
