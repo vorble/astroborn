@@ -24,7 +24,7 @@ export class World {
     return new Scene([
       `It is already light as you open your heavy eye lids for the first time today.`,
 
-      `You push yourself up and out of the bed you fought against the night before,
+      `You push yourself out of the bed you fought against the night before,
       where the thoughts of the day prior and the uncertainty of what today and the next
       will bring occupied your mind.`,
     ])
